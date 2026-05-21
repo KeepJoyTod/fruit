@@ -43,6 +43,13 @@ public class JpaVendorRepository implements VendorRepository {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<Vendor> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
     private VendorEntity toEntity(Vendor domain) {
         VendorEntity entity = new VendorEntity();
         entity.setId(domain.getId());

@@ -1,26 +1,28 @@
 CREATE TABLE users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    openid VARCHAR(64) NOT NULL UNIQUE,
+    username VARCHAR(64) NOT NULL UNIQUE,
+    password_hash VARCHAR(128) NOT NULL,
     role VARCHAR(32) NOT NULL DEFAULT 'CUSTOMER',
     nickname VARCHAR(64),
-    avatar_url VARCHAR(512),
+    enabled TINYINT(1) NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE user_sessions (
     token VARCHAR(64) PRIMARY KEY,
-    openid VARCHAR(64) NOT NULL,
+    user_id BIGINT NOT NULL,
     expires_at DATETIME NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_user_sessions_openid (openid),
-    INDEX idx_user_sessions_expires_at (expires_at)
+    INDEX idx_user_sessions_user_id (user_id),
+    INDEX idx_user_sessions_expires_at (expires_at),
+    CONSTRAINT fk_user_sessions_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 CREATE TABLE vendors (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    openid VARCHAR(64) NOT NULL UNIQUE,
+    openid VARCHAR(64) NOT NULL UNIQUE COMMENT '关联 users.username，保留字段名兼容旧代码',
     stall_name VARCHAR(80) NOT NULL,
     address VARCHAR(255) NOT NULL,
     latitude DECIMAL(10, 7) NOT NULL,

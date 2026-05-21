@@ -59,6 +59,18 @@ public class VendorService {
         return vendorRepository.findAllEnabled();
     }
 
+    public List<Vendor> listAllVendors() {
+        return vendorRepository.findAll();
+    }
+
+    public Vendor updateVendorEnabled(Long vendorId, boolean enabled) {
+        Vendor vendor = vendorRepository.findById(vendorId)
+                .orElseThrow(() -> new BusinessException(404, "vendor not found"));
+        vendor.setEnabled(enabled);
+        vendor.setUpdatedAt(Instant.now());
+        return vendorRepository.save(vendor);
+    }
+
     public DashboardResponse getDashboard(String openid) {
         Vendor vendor = getCurrentVendor(openid);
         var fruits = fruitRepository.findByVendorId(vendor.getId());

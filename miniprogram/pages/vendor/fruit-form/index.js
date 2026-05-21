@@ -1,4 +1,5 @@
 const { request, uploadImage } = require('../../../utils/request');
+const app = getApp();
 
 Page({
   data: {
@@ -17,6 +18,9 @@ Page({
   },
 
   onLoad(options) {
+    if (!this.ensureVendorRole()) {
+      return;
+    }
     if (options.id) {
       this.setData({ fruitId: options.id, isEdit: true });
       wx.setNavigationBarTitle({ title: '编辑水果' });
@@ -24,8 +28,23 @@ Page({
     }
   },
 
+  ensureVendorRole() {
+    const user = app.globalData.user || wx.getStorageSync('user');
+    if (!user) {
+      wx.showToast({ title: '请先登录摊主账号', icon: 'none' });
+      wx.navigateTo({ url: '/pages/auth/login/index' });
+      return false;
+    }
+    if (user.role !== 'VENDOR') {
+      wx.showToast({ title: '顾客不能访问摊主管理', icon: 'none' });
+      wx.switchTab({ url: '/pages/customer/home/index' });
+      return false;
+    }
+    return true;
+  },
+
   loadFruit(id) {
-    request({ url: `/fruits/${id}` }).then((fruit) => {
+    request({ url: `/vendor/fruits/${id}` }).then((fruit) => {
       this.setData({
         form: {
           name: fruit.name || '',

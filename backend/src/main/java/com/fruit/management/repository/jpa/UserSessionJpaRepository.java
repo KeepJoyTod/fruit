@@ -9,4 +9,6 @@ import java.time.Instant;
 @Repository
 public interface UserSessionJpaRepository extends JpaRepository<UserSessionEntity, String> {
     long deleteByExpiresAtBefore(Instant now);
+
+    long deleteByUserId(Long userId);
 }

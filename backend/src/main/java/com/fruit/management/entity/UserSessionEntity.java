@@ -13,8 +13,10 @@ public class UserSessionEntity {
     @Id
     @Column(length = 64)
     private String token;
-    @Column(nullable = false, length = 64)
+    @Column(length = 64)
     private String openid;
+    @Column(nullable = false)
+    private Long userId;
     @Column(nullable = false)
     private Instant expiresAt;
     @Column(nullable = false)
@@ -36,6 +38,14 @@ public class UserSessionEntity {
 
     public void setOpenid(String openid) {
         this.openid = openid;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public Instant getExpiresAt() {

@@ -1,10 +1,9 @@
-package com.fruit.management.dto;
+package com.fruit.management.service;
 
 import com.fruit.management.domain.UserRole;
 
-public record LoginResponse(
-        String token,
-        Long userId,
+public record CurrentUser(
+        Long id,
         String username,
         String nickname,
         UserRole role

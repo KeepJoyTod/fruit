@@ -1,13 +1,24 @@
 const app = getApp();
 
-function saveToken(token) {
+function saveAuth(data) {
+  const token = data.token;
+  const user = {
+    userId: data.userId,
+    username: data.username,
+    nickname: data.nickname,
+    role: data.role
+  };
   app.globalData.token = token;
+  app.globalData.user = user;
   wx.setStorageSync('token', token);
+  wx.setStorageSync('user', user);
 }
 
 function clearToken() {
   app.globalData.token = '';
+  app.globalData.user = null;
   wx.removeStorageSync('token');
+  wx.removeStorageSync('user');
 }
 
 function getStoredToken() {
@@ -19,36 +30,38 @@ function getStoredToken() {
   return token;
 }
 
-function login(options = {}) {
+function login(credentials = {}) {
   const token = getStoredToken();
-  if (!options.force && token) {
+  if (!credentials.force && token) {
     return Promise.resolve(app.globalData.token);
   }
+  if (!credentials.username || !credentials.password) {
+    return Promise.reject(new Error('请输入账号和密码'));
+  }
+  return authRequest('/auth/login', credentials);
+}
+
+function register(data) {
+  return authRequest('/auth/register', data);
+}
+
+function authRequest(path, data) {
   return new Promise((resolve, reject) => {
-    wx.login({
-      success(loginRes) {
-        if (!loginRes.code) {
-          reject(new Error('微信登录失败'));
+    wx.request({
+      url: `${app.globalData.apiBaseUrl}${path}`,
+      method: 'POST',
+      data,
+      header: {
+        'Content-Type': 'application/json'
+      },
+      success(res) {
+        const body = res.data || {};
+        if (res.statusCode >= 200 && res.statusCode < 300 && body.code === 0 && body.data && body.data.token) {
+          saveAuth(body.data);
+          resolve(body.data);
           return;
         }
-        wx.request({
-          url: `${app.globalData.apiBaseUrl}/auth/login`,
-          method: 'POST',
-          data: { code: loginRes.code },
-          header: {
-            'Content-Type': 'application/json'
-          },
-          success(res) {
-            const body = res.data || {};
-            if (res.statusCode >= 200 && res.statusCode < 300 && body.code === 0 && body.data && body.data.token) {
-              saveToken(body.data.token);
-              resolve(body.data.token);
-              return;
-            }
-            reject(new Error(body.message || '微信登录失败'));
-          },
-          fail: reject
-        });
+        reject(new Error(body.message || '登录失败'));
       },
       fail: reject
     });
@@ -58,16 +71,20 @@ function login(options = {}) {
 function request(options) {
   const url = `${app.globalData.apiBaseUrl}${options.url}`;
   const showErrorToast = options.showErrorToast !== false;
-  return login().then((token) => new Promise((resolve, reject) => {
+  const tokenPromise = options.auth === false ? Promise.resolve('') : login();
+  return tokenPromise.then((token) => new Promise((resolve, reject) => {
+    const header = {
+      'Content-Type': 'application/json',
+      ...(options.header || {})
+    };
+    if (token) {
+      header.Authorization = `Bearer ${token}`;
+    }
     wx.request({
       url,
       method: options.method || 'GET',
       data: options.data || {},
-      header: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        ...(options.header || {})
-      },
+      header,
       success(res) {
         if (res.statusCode === 401) {
           clearToken();
@@ -78,10 +95,13 @@ function request(options) {
           return;
         }
         const message = body.message || '请求失败';
+        const error = new Error(message);
+        error.statusCode = res.statusCode;
+        error.code = body.code;
         if (showErrorToast) {
           wx.showToast({ title: message, icon: 'none' });
         }
-        reject(new Error(message));
+        reject(error);
       },
       fail(error) {
         if (showErrorToast) {
@@ -133,6 +153,7 @@ function uploadImage(filePath) {
 module.exports = {
   clearToken,
   login,
+  register,
   request,
   uploadImage
 };

@@ -1,6 +1,7 @@
 package com.fruit.management.web;
 
 import com.fruit.management.common.ApiResponse;
+import com.fruit.management.domain.UserRole;
 import com.fruit.management.dto.FruitCreateRequest;
 import com.fruit.management.dto.FruitResponse;
 import com.fruit.management.dto.FruitStatusRequest;
@@ -38,8 +39,8 @@ public class FruitController {
             HttpServletRequest httpRequest,
             @Valid @RequestBody FruitCreateRequest request
     ) {
-        String openid = currentUserService.currentOpenid(httpRequest);
-        return ApiResponse.ok(FruitResponse.from(fruitService.createFruit(openid, request)));
+        String username = currentUserService.requireRole(httpRequest, UserRole.VENDOR).username();
+        return ApiResponse.ok(FruitResponse.from(fruitService.createFruit(username, request)));
     }
 
     @PutMapping("/fruits/{fruitId}")
@@ -48,8 +49,8 @@ public class FruitController {
             @PathVariable("fruitId") Long fruitId,
             @Valid @RequestBody FruitUpdateRequest request
     ) {
-        String openid = currentUserService.currentOpenid(httpRequest);
-        return ApiResponse.ok(FruitResponse.from(fruitService.updateFruit(openid, fruitId, request)));
+        String username = currentUserService.requireRole(httpRequest, UserRole.VENDOR).username();
+        return ApiResponse.ok(FruitResponse.from(fruitService.updateFruit(username, fruitId, request)));
     }
 
     @PatchMapping("/fruits/{fruitId}/status")
@@ -58,24 +59,33 @@ public class FruitController {
             @PathVariable("fruitId") Long fruitId,
             @Valid @RequestBody FruitStatusRequest request
     ) {
-        String openid = currentUserService.currentOpenid(httpRequest);
-        return ApiResponse.ok(FruitResponse.from(fruitService.updateStatus(openid, fruitId, request.status())));
+        String username = currentUserService.requireRole(httpRequest, UserRole.VENDOR).username();
+        return ApiResponse.ok(FruitResponse.from(fruitService.updateStatus(username, fruitId, request.status())));
     }
 
     @DeleteMapping("/fruits/{fruitId}")
     public ApiResponse<Void> deleteFruit(HttpServletRequest httpRequest, @PathVariable("fruitId") Long fruitId) {
-        String openid = currentUserService.currentOpenid(httpRequest);
-        fruitService.deleteFruit(openid, fruitId);
+        String username = currentUserService.requireRole(httpRequest, UserRole.VENDOR).username();
+        fruitService.deleteFruit(username, fruitId);
         return ApiResponse.ok(null);
     }
 
     @GetMapping("/vendor/fruits")
     public ApiResponse<List<FruitResponse>> listVendorFruits(HttpServletRequest httpRequest) {
-        String openid = currentUserService.currentOpenid(httpRequest);
-        return ApiResponse.ok(fruitService.listVendorFruits(openid)
+        String username = currentUserService.requireRole(httpRequest, UserRole.VENDOR).username();
+        return ApiResponse.ok(fruitService.listVendorFruits(username)
                 .stream()
                 .map(FruitResponse::from)
                 .toList());
+    }
+
+    @GetMapping("/vendor/fruits/{fruitId}")
+    public ApiResponse<FruitResponse> getVendorFruit(
+            HttpServletRequest httpRequest,
+            @PathVariable("fruitId") Long fruitId
+    ) {
+        String username = currentUserService.requireRole(httpRequest, UserRole.VENDOR).username();
+        return ApiResponse.ok(FruitResponse.from(fruitService.getVendorFruit(username, fruitId)));
     }
 
     @GetMapping("/fruits")

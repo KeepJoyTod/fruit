@@ -1,16 +1,18 @@
 package com.fruit.management;
 
 import com.fruit.management.common.ApiResponse;
+import com.fruit.management.common.BusinessException;
 import com.fruit.management.domain.Fruit;
+import com.fruit.management.domain.UserRole;
+import com.fruit.management.domain.Vendor;
 import com.fruit.management.dto.FruitCreateRequest;
 import com.fruit.management.dto.LoginResponse;
+import com.fruit.management.dto.VendorAdminResponse;
 import com.fruit.management.dto.VendorUpsertRequest;
 import com.fruit.management.repository.jpa.UserSessionJpaRepository;
+import com.fruit.management.service.AuthService;
 import com.fruit.management.service.FruitService;
 import com.fruit.management.service.VendorService;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,27 +24,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AuthAndPermissionTests {
-    private static final WireMockServer WIRE_MOCK = new WireMockServer(wireMockConfig().dynamicPort());
-
-    static {
-        WIRE_MOCK.start();
-    }
 
     @LocalServerPort
     private int port;
@@ -57,52 +46,32 @@ class AuthAndPermissionTests {
     private FruitService fruitService;
 
     @Autowired
+    private AuthService authService;
+
+    @Autowired
     private UserSessionJpaRepository sessionRepository;
 
-    @DynamicPropertySource
-    static void authProperties(DynamicPropertyRegistry registry) {
-        registry.add("fruit.wechat.appid", () -> "test-appid");
-        registry.add("fruit.wechat.secret", () -> "test-secret");
-        registry.add("fruit.wechat.code2-session-url", () -> WIRE_MOCK.baseUrl() + "/sns/jscode2session");
-    }
-
-    @BeforeEach
-    void resetWireMock() {
-        WIRE_MOCK.resetAll();
-    }
-
-    @AfterAll
-    static void stopWireMock() {
-        WIRE_MOCK.stop();
-    }
-
     @Test
-    void loginCallsWechatCode2SessionAndReturnsToken() {
-        WIRE_MOCK.stubFor(get(urlPathEqualTo("/sns/jscode2session"))
-                .willReturn(okJson("{\"openid\":\"openid-vendor-a\",\"session_key\":\"session-a\"}")));
+    void registerVendorAndLoginReturnsToken() {
+        ResponseEntity<ApiResponse<LoginResponse>> registerResponse = register("vendor-auth-a", "pass123456", UserRole.VENDOR);
 
-        ResponseEntity<ApiResponse<LoginResponse>> response = restTemplate.exchange(
-                baseUrl() + "/api/auth/login",
-                HttpMethod.POST,
-                new HttpEntity<>("{\"code\":\"wx-code-a\"}", jsonHeaders()),
-                new ParameterizedTypeReference<>() {
-                }
-        );
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        String token = response.getBody().data().token();
-        assertThat(token).isNotBlank();
-        assertThat(sessionRepository.findById(token))
+        assertThat(registerResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(registerResponse.getBody()).isNotNull();
+        LoginResponse registered = registerResponse.getBody().data();
+        assertThat(registered.token()).isNotBlank();
+        assertThat(registered.role()).isEqualTo(UserRole.VENDOR);
+        assertThat(sessionRepository.findById(registered.token()))
                 .isPresent()
                 .get()
-                .extracting("openid")
-                .isEqualTo("openid-vendor-a");
-        WIRE_MOCK.verify(getRequestedFor(urlPathEqualTo("/sns/jscode2session"))
-                .withQueryParam("appid", equalTo("test-appid"))
-                .withQueryParam("secret", equalTo("test-secret"))
-                .withQueryParam("js_code", equalTo("wx-code-a"))
-                .withQueryParam("grant_type", equalTo("authorization_code")));
+                .extracting("userId")
+                .isEqualTo(registered.userId());
+
+        ResponseEntity<ApiResponse<LoginResponse>> loginResponse = login("vendor-auth-a", "pass123456");
+
+        assertThat(loginResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(loginResponse.getBody()).isNotNull();
+        assertThat(loginResponse.getBody().data().username()).isEqualTo("vendor-auth-a");
+        assertThat(loginResponse.getBody().data().role()).isEqualTo(UserRole.VENDOR);
     }
 
     @Test
@@ -122,9 +91,11 @@ class AuthAndPermissionTests {
 
     @Test
     void vendorCannotUpdateAnotherVendorsFruit() {
-        vendorService.upsertCurrentVendor("openid-vendor-a", vendor("A"));
-        vendorService.upsertCurrentVendor("openid-vendor-b", vendor("B"));
-        Fruit fruit = fruitService.createFruit("openid-vendor-a", new FruitCreateRequest(
+        register("vendor-owner-a", "pass123456", UserRole.VENDOR);
+        register("vendor-owner-b", "pass123456", UserRole.VENDOR);
+        vendorService.upsertCurrentVendor("vendor-owner-a", vendor("A"));
+        vendorService.upsertCurrentVendor("vendor-owner-b", vendor("B"));
+        Fruit fruit = fruitService.createFruit("vendor-owner-a", new FruitCreateRequest(
                 "苹果",
                 new BigDecimal("8.80"),
                 "斤",
@@ -132,7 +103,7 @@ class AuthAndPermissionTests {
                 List.of("脆甜"),
                 "A vendor fruit"
         ));
-        String tokenB = login("openid-vendor-b", "wx-code-b");
+        String tokenB = loginToken("vendor-owner-b", "pass123456");
 
         ResponseEntity<ApiResponse<Void>> response = restTemplate.exchange(
                 baseUrl() + "/api/fruits/" + fruit.getId(),
@@ -156,17 +127,91 @@ class AuthAndPermissionTests {
         assertThat(response.getBody().code()).isEqualTo(403);
     }
 
-    private String login(String openid, String code) {
-        WIRE_MOCK.stubFor(get(urlPathEqualTo("/sns/jscode2session"))
-                .withQueryParam("js_code", equalTo(code))
-                .willReturn(okJson("{\"openid\":\"" + openid + "\",\"session_key\":\"session\"}")));
-        ResponseEntity<ApiResponse<LoginResponse>> response = restTemplate.exchange(
-                baseUrl() + "/api/auth/login",
-                HttpMethod.POST,
-                new HttpEntity<>("{\"code\":\"" + code + "\"}", jsonHeaders()),
+    @Test
+    void vendorCannotReadAnotherVendorsPrivateFruitDetail() {
+        register("vendor-reader-a", "pass123456", UserRole.VENDOR);
+        register("vendor-reader-b", "pass123456", UserRole.VENDOR);
+        vendorService.upsertCurrentVendor("vendor-reader-a", vendor("ReaderA"));
+        vendorService.upsertCurrentVendor("vendor-reader-b", vendor("ReaderB"));
+        Fruit fruit = fruitService.createFruit("vendor-reader-a", new FruitCreateRequest(
+                "梨",
+                new BigDecimal("6.80"),
+                "斤",
+                List.of(),
+                List.of("清甜"),
+                "A private vendor fruit"
+        ));
+        String tokenB = loginToken("vendor-reader-b", "pass123456");
+
+        ResponseEntity<ApiResponse<Void>> response = restTemplate.exchange(
+                baseUrl() + "/api/vendor/fruits/" + fruit.getId(),
+                HttpMethod.GET,
+                new HttpEntity<>(bearerJsonHeaders(tokenB)),
                 new ParameterizedTypeReference<>() {
                 }
         );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().code()).isEqualTo(403);
+    }
+
+    @Test
+    void superAdminCanDisableVendor() {
+        authService.createUser("admin-test-a", "pass123456", "Admin", UserRole.SUPER_ADMIN);
+        Vendor vendor = vendorService.upsertCurrentVendor("managed-vendor-a", vendor("Managed"));
+        String token = loginToken("admin-test-a", "pass123456");
+
+        ResponseEntity<ApiResponse<VendorAdminResponse>> response = restTemplate.exchange(
+                baseUrl() + "/api/admin/vendors/" + vendor.getId() + "/enabled",
+                HttpMethod.POST,
+                new HttpEntity<>("{\"enabled\":false}", bearerJsonHeaders(token)),
+                new ParameterizedTypeReference<>() {
+                }
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().data().enabled()).isFalse();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> vendorService.getPublicVendor(vendor.getId()))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("vendor not found");
+    }
+
+    private ResponseEntity<ApiResponse<LoginResponse>> register(String username, String password, UserRole role) {
+        return restTemplate.exchange(
+                baseUrl() + "/api/auth/register",
+                HttpMethod.POST,
+                new HttpEntity<>("""
+                        {
+                          "username": "%s",
+                          "password": "%s",
+                          "nickname": "%s",
+                          "role": "%s"
+                        }
+                        """.formatted(username, password, username, role.name()), jsonHeaders()),
+                new ParameterizedTypeReference<>() {
+                }
+        );
+    }
+
+    private ResponseEntity<ApiResponse<LoginResponse>> login(String username, String password) {
+        return restTemplate.exchange(
+                baseUrl() + "/api/auth/login",
+                HttpMethod.POST,
+                new HttpEntity<>("""
+                        {
+                          "username": "%s",
+                          "password": "%s"
+                        }
+                        """.formatted(username, password), jsonHeaders()),
+                new ParameterizedTypeReference<>() {
+                }
+        );
+    }
+
+    private String loginToken(String username, String password) {
+        ResponseEntity<ApiResponse<LoginResponse>> response = login(username, password);
         assertThat(response.getBody()).isNotNull();
         return response.getBody().data().token();
     }

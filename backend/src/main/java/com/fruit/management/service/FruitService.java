@@ -67,6 +67,10 @@ public class FruitService {
         return fruitRepository.findByVendorId(vendor.getId());
     }
 
+    public Fruit getVendorFruit(String openid, Long fruitId) {
+        return getOwnedFruit(openid, fruitId);
+    }
+
     public List<Fruit> listPublicFruits(Long vendorId, String tag) {
         return fruitRepository.findPublicFruits(vendorId, tag);
     }

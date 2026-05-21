@@ -17,7 +17,14 @@ Page({
   },
 
   onShow() {
+    this.refreshTabBar();
     this.loadPageData();
+  },
+
+  refreshTabBar() {
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().refresh();
+    }
   },
 
   onPullDownRefresh() {
@@ -31,7 +38,7 @@ Page({
   },
 
   loadVendors() {
-    return request({ url: '/vendors' })
+    return request({ url: '/vendors', auth: false })
       .then((vendors) => this.setData({ vendors }))
       .catch(() => this.setData({ vendors: [] }));
   },
@@ -45,7 +52,7 @@ Page({
       params.push(`vendorId=${this.data.activeVendorId}`);
     }
     const query = params.length ? `?${params.join('&')}` : '';
-    request({ url: `/fruits${query}` })
+    request({ url: `/fruits${query}`, auth: false })
       .then((fruits) => {
         this.setData({ allFruits: fruits || [] });
         this.applyKeyword();

@@ -24,9 +24,9 @@ Page({
   },
 
   loadFruit(id) {
-    request({ url: `/fruits/${id}` }).then((fruit) => {
+    request({ url: `/fruits/${id}`, auth: false }).then((fruit) => {
       this.setData({ fruit });
-      return request({ url: `/vendors/${fruit.vendorId}` });
+      return request({ url: `/vendors/${fruit.vendorId}`, auth: false });
     }).then((vendor) => {
       this.setData({ vendor });
     });

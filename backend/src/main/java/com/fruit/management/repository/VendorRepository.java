@@ -13,4 +13,6 @@ public interface VendorRepository {
     Optional<Vendor> findByOpenid(String openid);
 
     List<Vendor> findAllEnabled();
+
+    List<Vendor> findAll();
 }

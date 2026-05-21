@@ -16,6 +16,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 management:
   endpoints:
@@ -24,11 +29,13 @@ management:
         include: health,info
 
 fruit:
-  wechat:
-    appid: ${WECHAT_APPID:}
-    secret: ${WECHAT_SECRET:}
-    code2-session-url: ${WECHAT_CODE2_SESSION_URL:https://api.weixin.qq.com/sns/jscode2session}
   auth:
     session-ttl-minutes: ${FRUIT_SESSION_TTL_MINUTES:10080}
+  admin:
+    username: ${FRUIT_ADMIN_USERNAME:admin}
+    password: ${FRUIT_ADMIN_PASSWORD:admin123}
   demo-data:
     enabled: ${FRUIT_DEMO_DATA_ENABLED:true}
+  upload:
+    image-dir: ${FRUIT_IMAGE_DIR:./uploads/images}
+    image-url-prefix: ${FRUIT_IMAGE_URL_PREFIX:/images}

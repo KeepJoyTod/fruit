@@ -44,4 +44,12 @@ public class InMemoryVendorRepository implements VendorRepository {
                 .sorted(Comparator.comparing(Vendor::getUpdatedAt).reversed())
                 .toList();
     }
+
+    @Override
+    public List<Vendor> findAll() {
+        return vendors.values()
+                .stream()
+                .sorted(Comparator.comparing(Vendor::getUpdatedAt).reversed())
+                .toList();
+    }
 }

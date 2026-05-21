@@ -1,87 +1,81 @@
 package com.fruit.management.service;
 
 import com.fruit.management.common.BusinessException;
+import com.fruit.management.domain.UserRole;
+import com.fruit.management.dto.CurrentUserResponse;
 import com.fruit.management.dto.LoginResponse;
-import com.fruit.management.dto.WechatSessionResponse;
+import com.fruit.management.dto.RegisterRequest;
+import com.fruit.management.entity.UserEntity;
 import com.fruit.management.entity.UserSessionEntity;
+import com.fruit.management.repository.jpa.UserJpaRepository;
 import com.fruit.management.repository.jpa.UserSessionJpaRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class AuthService {
-    private static final String GRANT_TYPE = "authorization_code";
-
-    private final ObjectMapper objectMapper;
-    private final RestTemplate restTemplate;
-    private final String appid;
-    private final String secret;
-    private final String code2SessionUrl;
-    private final Duration sessionTtl;
+    private final UserJpaRepository userRepository;
     private final UserSessionJpaRepository sessionRepository;
+    private final PasswordService passwordService;
+    private final Duration sessionTtl;
 
-    public AuthService(RestTemplateBuilder restTemplateBuilder,
-                       ObjectMapper objectMapper,
+    public AuthService(UserJpaRepository userRepository,
                        UserSessionJpaRepository sessionRepository,
-                       @Value("${fruit.wechat.appid:}") String appid,
-                       @Value("${fruit.wechat.secret:}") String secret,
-                       @Value("${fruit.wechat.code2-session-url:https://api.weixin.qq.com/sns/jscode2session}") String code2SessionUrl,
+                       PasswordService passwordService,
                        @Value("${fruit.auth.session-ttl-minutes:10080}") long sessionTtlMinutes) {
-        this.restTemplate = restTemplateBuilder
-                .setConnectTimeout(Duration.ofSeconds(3))
-                .setReadTimeout(Duration.ofSeconds(5))
-                .build();
-        this.objectMapper = objectMapper;
+        this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
-        this.appid = appid;
-        this.secret = secret;
-        this.code2SessionUrl = code2SessionUrl;
+        this.passwordService = passwordService;
         this.sessionTtl = Duration.ofMinutes(sessionTtlMinutes);
     }
 
     @Transactional
-    public LoginResponse login(String code) {
-        if (appid.isBlank() || secret.isBlank()) {
-            throw new BusinessException(500, "wechat appid or secret is not configured");
+    public LoginResponse login(String username, String password) {
+        UserEntity user = userRepository.findByUsername(normalizeUsername(username))
+                .orElseThrow(() -> new BusinessException(401, "username or password is incorrect"));
+        if (!Boolean.TRUE.equals(user.getEnabled()) || !passwordService.matches(password, user.getPasswordHash())) {
+            throw new BusinessException(401, "username or password is incorrect");
         }
-        WechatSessionResponse response = requestWechatSession(code);
-        if (response == null) {
-            throw new BusinessException(502, "wechat login returned empty response");
-        }
-        if (response.errcode() != null && response.errcode() != 0) {
-            throw new BusinessException(401, "wechat login failed: " + response.errmsg());
-        }
-        if (response.openid() == null || response.openid().isBlank()) {
-            throw new BusinessException(502, "wechat login missing openid");
-        }
-        String token = UUID.randomUUID().toString().replace("-", "");
-        Instant now = Instant.now();
-        UserSessionEntity session = new UserSessionEntity();
-        session.setToken(token);
-        session.setOpenid(response.openid());
-        session.setExpiresAt(now.plus(sessionTtl));
-        session.setCreatedAt(now);
-        session.setUpdatedAt(now);
-        sessionRepository.save(session);
-        sessionRepository.deleteByExpiresAtBefore(now);
-        return new LoginResponse(token);
+        String token = createSession(user.getId());
+        return toLoginResponse(token, user);
     }
 
     @Transactional
-    public Optional<String> findOpenidByToken(String token) {
+    public LoginResponse register(RegisterRequest request) {
+        UserRole role = request.role() == UserRole.VENDOR ? UserRole.VENDOR : UserRole.CUSTOMER;
+        UserEntity user = createUser(request.username(), request.password(), request.nickname(), role);
+        String token = createSession(user.getId());
+        return toLoginResponse(token, user);
+    }
+
+    @Transactional
+    public UserEntity createUser(String username, String password, String nickname, UserRole role) {
+        String normalizedUsername = normalizeUsername(username);
+        if (userRepository.existsByUsername(normalizedUsername)) {
+            throw new BusinessException(409, "username already exists");
+        }
+        Instant now = Instant.now();
+        UserEntity user = new UserEntity();
+        user.setOpenid(normalizedUsername);
+        user.setUsername(normalizedUsername);
+        user.setPasswordHash(passwordService.hash(password));
+        user.setRole(role);
+        user.setNickname(nickname == null || nickname.isBlank() ? normalizedUsername : nickname.trim());
+        user.setEnabled(true);
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public Optional<CurrentUser> findUserByToken(String token) {
         if (token == null || token.isBlank()) {
             return Optional.empty();
         }
@@ -94,35 +88,38 @@ public class AuthService {
             sessionRepository.delete(entity);
             return Optional.empty();
         }
-        return Optional.of(entity.getOpenid());
+        return userRepository.findById(entity.getUserId())
+                .filter(user -> Boolean.TRUE.equals(user.getEnabled()))
+                .map(user -> new CurrentUser(user.getId(), user.getUsername(), user.getNickname(), user.getRole()));
     }
 
-    private WechatSessionResponse requestWechatSession(String code) {
-        URI uri = UriComponentsBuilder.fromHttpUrl(code2SessionUrl)
-                .queryParam("appid", appid)
-                .queryParam("secret", secret)
-                .queryParam("js_code", code)
-                .queryParam("grant_type", GRANT_TYPE)
-                .build()
-                .toUri();
-        try {
-            String response = restTemplate.getForObject(uri, String.class);
-            return objectMapper.readValue(response, WechatSessionResponse.class);
-        } catch (RestClientException exception) {
-            throw new BusinessException(502, "wechat login request failed: " + sanitizeErrorMessage(exception, code));
-        } catch (JsonProcessingException exception) {
-            throw new BusinessException(502, "wechat login response parse failed");
-        }
+    public CurrentUserResponse toCurrentUserResponse(CurrentUser user) {
+        return new CurrentUserResponse(user.id(), user.username(), user.nickname(), user.role());
     }
 
-    private String sanitizeErrorMessage(RestClientException exception, String code) {
-        String message = exception.getClass().getSimpleName();
-        if (exception.getMessage() != null && !exception.getMessage().isBlank()) {
-            message = message + ": " + exception.getMessage();
+    private String createSession(Long userId) {
+        String token = UUID.randomUUID().toString().replace("-", "");
+        Instant now = Instant.now();
+        UserSessionEntity session = new UserSessionEntity();
+        session.setToken(token);
+        session.setUserId(userId);
+        session.setOpenid(userRepository.findById(userId).map(UserEntity::getOpenid).orElse(null));
+        session.setExpiresAt(now.plus(sessionTtl));
+        session.setCreatedAt(now);
+        session.setUpdatedAt(now);
+        sessionRepository.save(session);
+        sessionRepository.deleteByExpiresAtBefore(now);
+        return token;
+    }
+
+    private LoginResponse toLoginResponse(String token, UserEntity user) {
+        return new LoginResponse(token, user.getId(), user.getUsername(), user.getNickname(), user.getRole());
+    }
+
+    private String normalizeUsername(String username) {
+        if (username == null || username.isBlank()) {
+            throw new BusinessException(400, "username is required");
         }
-        return message
-                .replace(appid, "***")
-                .replace(secret, "***")
-                .replace(code, "***");
+        return username.trim().toLowerCase(Locale.ROOT);
     }
 }

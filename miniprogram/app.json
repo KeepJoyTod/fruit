@@ -2,6 +2,7 @@
   "pages": [
     "pages/auth/login/index",
     "pages/auth/register/index",
+    "pages/admin/vendors/index",
     "pages/customer/home/index",
     "pages/customer/detail/index",
     "pages/vendor/dashboard/index",
@@ -14,6 +15,7 @@
     "backgroundColor": "#f6f8f5"
   },
   "tabBar": {
+    "custom": true,
     "color": "#5f6b63",
     "selectedColor": "#1f7a4d",
     "backgroundColor": "#ffffff",

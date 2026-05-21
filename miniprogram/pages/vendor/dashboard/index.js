@@ -1,4 +1,5 @@
 const { request } = require('../../../utils/request');
+const app = getApp();
 
 Page({
   data: {
@@ -21,7 +22,32 @@ Page({
   },
 
   onShow() {
+    this.refreshTabBar();
+    if (!this.ensureVendorRole()) {
+      return;
+    }
     this.loadAll();
+  },
+
+  refreshTabBar() {
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().refresh();
+    }
+  },
+
+  ensureVendorRole() {
+    const user = app.globalData.user || wx.getStorageSync('user');
+    if (!user) {
+      wx.showToast({ title: '请先登录摊主账号', icon: 'none' });
+      wx.navigateTo({ url: '/pages/auth/login/index' });
+      return false;
+    }
+    if (user.role !== 'VENDOR') {
+      wx.showToast({ title: '顾客不能访问摊主管理', icon: 'none' });
+      wx.switchTab({ url: '/pages/customer/home/index' });
+      return false;
+    }
+    return true;
   },
 
   loadAll() {
@@ -51,7 +77,12 @@ Page({
         });
         return true;
       })
-      .catch(() => {
+      .catch((error) => {
+        if (error.statusCode === 403) {
+          wx.showToast({ title: '顾客不能访问摊主管理', icon: 'none' });
+          wx.switchTab({ url: '/pages/customer/home/index' });
+          return false;
+        }
         this.setData({
           vendor: {},
           editingProfile: true,

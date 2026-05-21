@@ -13,10 +13,10 @@ services:
       - fruit_mysql_data:/var/lib/mysql
 
   redis:
-    image: redis:7.4
+    image: redis:7-alpine
     container_name: fruit-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
 
 volumes:
   fruit_mysql_data:

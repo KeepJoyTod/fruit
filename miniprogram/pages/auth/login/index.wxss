@@ -33,6 +33,22 @@
   gap: 22rpx;
 }
 
+.form {
+  display: grid;
+  gap: 18rpx;
+}
+
+.form input {
+  width: 100%;
+  height: 84rpx;
+  padding: 0 18rpx;
+  box-sizing: border-box;
+  border: 1rpx solid #d8e2da;
+  border-radius: 10rpx;
+  background: #ffffff;
+  font-size: 28rpx;
+}
+
 .actions button {
   margin: 0;
 }
