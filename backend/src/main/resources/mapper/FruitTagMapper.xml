@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fruit.management.mapper.FruitTagMapper">
+    <resultMap id="FruitTagResultMap" type="com.fruit.management.entity.FruitTagEntity">
+        <id column="id" property="id"/>
+        <result column="fruit_id" property="fruitId"/>
+        <result column="tag" property="tag"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.fruit.management.entity.FruitTagEntity">
+        INSERT INTO fruit_tags (fruit_id, tag, created_at)
+        VALUES (#{fruitId}, #{tag}, #{createdAt})
+    </insert>
+
+    <insert id="batchInsert">
+        INSERT INTO fruit_tags (fruit_id, tag, created_at)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.fruitId}, #{item.tag}, #{item.createdAt})
+        </foreach>
+    </insert>
+
+    <select id="selectByFruitId" resultMap="FruitTagResultMap">
+        SELECT * FROM fruit_tags WHERE fruit_id = #{fruitId}
+    </select>
+
+    <select id="selectByTag" resultMap="FruitTagResultMap">
+        SELECT * FROM fruit_tags WHERE tag = #{tag}
+    </select>
+
+    <delete id="deleteByFruitId">
+        DELETE FROM fruit_tags WHERE fruit_id = #{fruitId}
+    </delete>
+</mapper>

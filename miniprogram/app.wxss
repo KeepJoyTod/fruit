@@ -1,0 +1,30 @@
+page {
+  min-height: 100%;
+  background: #f6f8f5;
+  color: #17251c;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.primary-button {
+  height: 88rpx;
+  line-height: 88rpx;
+  border-radius: 12rpx;
+  background: #1f7a4d;
+  color: #ffffff;
+  font-size: 30rpx;
+}
+
+.ghost-button {
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 10rpx;
+  background: #edf4ef;
+  color: #1f7a4d;
+  font-size: 26rpx;
+}

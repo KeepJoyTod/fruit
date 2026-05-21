@@ -1,0 +1,25 @@
+<view class="page" wx:if="{{fruit}}">
+  <image wx:if="{{fruit.images[0]}}" class="hero-image" src="{{fruit.images[0]}}" mode="aspectFill" />
+  <view wx:else class="hero-image hero-placeholder">鲜果</view>
+  <view class="detail">
+    <view class="name-row">
+      <text class="name">{{fruit.name}}</text>
+      <text class="status">{{statusText[fruit.status]}}</text>
+    </view>
+    <text class="price">¥{{fruit.price}}/{{fruit.unit}}</text>
+    <text class="description">{{fruit.description || '老板还没有填写介绍'}}</text>
+    <view class="tags">
+      <text wx:for="{{fruit.tags}}" wx:key="*this">{{item}}</text>
+    </view>
+  </view>
+
+  <view class="vendor" wx:if="{{vendor}}">
+    <text class="vendor-name">{{vendor.stallName}}</text>
+    <text class="vendor-address">{{vendor.address}}</text>
+    <view class="actions">
+      <button class="ghost-button" bindtap="callVendor">联系老板</button>
+      <button class="ghost-button" bindtap="copyAddress">复制地址</button>
+      <button class="primary-button nav-button" bindtap="openMap">导航到摊位</button>
+    </view>
+  </view>
+</view>

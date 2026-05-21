@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fruit.management.mapper.VendorMapper">
+    <resultMap id="VendorResultMap" type="com.fruit.management.entity.VendorEntity">
+        <id column="id" property="id"/>
+        <result column="openid" property="openid"/>
+        <result column="stall_name" property="stallName"/>
+        <result column="address" property="address"/>
+        <result column="latitude" property="latitude"/>
+        <result column="longitude" property="longitude"/>
+        <result column="phone" property="phone"/>
+        <result column="enabled" property="enabled"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.fruit.management.entity.VendorEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO vendors (openid, stall_name, address, latitude, longitude, phone, enabled, created_at, updated_at)
+        VALUES (#{openid}, #{stallName}, #{address}, #{latitude}, #{longitude}, #{phone}, #{enabled}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update" parameterType="com.fruit.management.entity.VendorEntity">
+        UPDATE vendors
+        SET stall_name = #{stallName},
+            address = #{address},
+            latitude = #{latitude},
+            longitude = #{longitude},
+            phone = #{phone},
+            enabled = #{enabled},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="VendorResultMap">
+        SELECT * FROM vendors WHERE id = #{id}
+    </select>
+
+    <select id="selectByOpenid" resultMap="VendorResultMap">
+        SELECT * FROM vendors WHERE openid = #{openid}
+    </select>
+
+    <select id="selectAllEnabled" resultMap="VendorResultMap">
+        SELECT * FROM vendors WHERE enabled = true ORDER BY updated_at DESC
+    </select>
+</mapper>

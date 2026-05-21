@@ -1,0 +1,41 @@
+# Maven / Java build output
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Runtime logs
+*.log
+*.out.log
+*.err.log
+
+# IDE and editor files
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# WeChat Mini Program local settings
+miniprogram/project.private.config.json
+
+# Node dependencies and package manager caches
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment and local override files
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.yaml
+application-local.properties
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini

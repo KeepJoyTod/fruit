@@ -1,0 +1,48 @@
+<view class="page">
+  <view class="header">
+    <view>
+      <text class="title">今日鲜果</text>
+      <text class="subtitle">附近摊位新鲜上架</text>
+    </view>
+    <button class="ghost-button refresh" bindtap="loadPageData">刷新</button>
+  </view>
+
+  <view class="search-box">
+    <input value="{{keyword}}" bindinput="onSearchInput" placeholder="搜索水果、标签或卖点" confirm-type="search" />
+    <button wx:if="{{keyword}}" class="clear-btn" bindtap="clearSearch">清除</button>
+  </view>
+
+  <scroll-view class="vendor-scroll" scroll-x>
+    <view class="vendor-chip {{activeVendorId === '' ? 'active' : ''}}" data-id="" bindtap="changeVendor">全部摊位</view>
+    <view class="vendor-chip {{activeVendorId == item.id ? 'active' : ''}}" wx:for="{{vendors}}" wx:key="id" data-id="{{item.id}}" bindtap="changeVendor">
+      {{item.stallName}}
+    </view>
+  </scroll-view>
+
+  <view class="filter-row">
+    <view class="filter {{activeTag === '' ? 'active' : ''}}" data-tag="" bindtap="changeTag">全部</view>
+    <view class="filter {{activeTag === '新鲜到货' ? 'active' : ''}}" data-tag="新鲜到货" bindtap="changeTag">新鲜到货</view>
+    <view class="filter {{activeTag === '可试吃' ? 'active' : ''}}" data-tag="可试吃" bindtap="changeTag">可试吃</view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+  <view class="fruit-grid">
+    <view class="fruit-card" wx:for="{{fruits}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+      <image wx:if="{{item.images[0]}}" class="fruit-image" src="{{item.images[0]}}" mode="aspectFill" />
+      <view wx:else class="fruit-image fruit-placeholder">鲜果</view>
+      <view class="fruit-info">
+        <text class="fruit-name">{{item.name}}</text>
+        <text class="fruit-price">¥{{item.price}}/{{item.unit}}</text>
+        <view class="fruit-meta">
+          <text>{{statusText[item.status]}}</text>
+          <text>{{item.viewCount}} 浏览</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{!loading && fruits.length === 0}}">
+    <text>暂无匹配水果</text>
+    <button class="ghost-button" bindtap="clearSearch">查看全部</button>
+  </view>
+</view>

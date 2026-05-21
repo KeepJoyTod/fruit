@@ -1,0 +1,29 @@
+{
+  "pages": [
+    "pages/customer/home/index",
+    "pages/customer/detail/index",
+    "pages/vendor/dashboard/index",
+    "pages/vendor/fruit-form/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "鲜果摊",
+    "navigationBarBackgroundColor": "#1f7a4d",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f6f8f5"
+  },
+  "tabBar": {
+    "color": "#5f6b63",
+    "selectedColor": "#1f7a4d",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/customer/home/index",
+        "text": "逛水果"
+      },
+      {
+        "pagePath": "pages/vendor/dashboard/index",
+        "text": "摊主管理"
+      }
+    ]
+  }
+}

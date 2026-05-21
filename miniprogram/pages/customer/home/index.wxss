@@ -1,0 +1,155 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 700;
+}
+
+.subtitle {
+  display: block;
+  margin-top: 8rpx;
+  color: #637166;
+  font-size: 26rpx;
+}
+
+.refresh {
+  width: 150rpx;
+  margin: 0;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+  padding: 12rpx 14rpx;
+  border-radius: 12rpx;
+  background: #ffffff;
+}
+
+.search-box input {
+  flex: 1;
+  height: 64rpx;
+  font-size: 28rpx;
+}
+
+.clear-btn {
+  width: 108rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  margin: 0;
+  border-radius: 8rpx;
+  background: #edf4ef;
+  color: #1f7a4d;
+  font-size: 24rpx;
+}
+
+.vendor-scroll {
+  width: 100%;
+  white-space: nowrap;
+  margin-bottom: 20rpx;
+}
+
+.vendor-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 64rpx;
+  margin-right: 14rpx;
+  padding: 0 22rpx;
+  border-radius: 10rpx;
+  background: #ffffff;
+  color: #56635b;
+  font-size: 25rpx;
+}
+
+.vendor-chip.active {
+  background: #17251c;
+  color: #ffffff;
+}
+
+.filter-row {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.filter {
+  padding: 14rpx 24rpx;
+  border-radius: 10rpx;
+  background: #ffffff;
+  color: #56635b;
+  font-size: 26rpx;
+}
+
+.filter.active {
+  background: #1f7a4d;
+  color: #ffffff;
+}
+
+.loading {
+  margin: 60rpx 0;
+  text-align: center;
+  color: #7a857d;
+}
+
+.fruit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20rpx;
+}
+
+.fruit-card {
+  overflow: hidden;
+  border-radius: 12rpx;
+  background: #ffffff;
+  box-shadow: 0 6rpx 18rpx rgba(20, 44, 29, 0.08);
+}
+
+.fruit-image {
+  width: 100%;
+  height: 220rpx;
+  background: #dbe6dc;
+}
+
+.fruit-info {
+  padding: 18rpx;
+}
+
+.fruit-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.fruit-price {
+  display: block;
+  margin-top: 8rpx;
+  color: #d35400;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.fruit-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12rpx;
+  color: #7a857d;
+  font-size: 22rpx;
+}
+
+.empty {
+  margin-top: 160rpx;
+  text-align: center;
+  color: #7a857d;
+}
+
+.empty text {
+  display: block;
+  margin-bottom: 20rpx;
+}
