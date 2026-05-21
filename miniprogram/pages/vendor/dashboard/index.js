@@ -25,16 +25,22 @@ Page({
   },
 
   loadAll() {
-    this.loadVendor();
-    this.loadDashboard();
-    this.loadFruits();
+    this.loadVendor()
+      .then((hasVendor) => {
+        if (!hasVendor) {
+          return;
+        }
+        this.loadDashboard();
+        this.loadFruits();
+      });
   },
 
   loadVendor() {
-    request({ url: '/vendor/profile' })
+    return request({ url: '/vendor/profile', showErrorToast: false })
       .then((vendor) => {
         this.setData({
           vendor,
+          editingProfile: false,
           profileForm: {
             stallName: vendor.stallName || '',
             address: vendor.address || '',
@@ -43,8 +49,17 @@ Page({
             phone: vendor.phone || ''
           }
         });
+        return true;
       })
-      .catch(() => {});
+      .catch(() => {
+        this.setData({
+          vendor: {},
+          editingProfile: true,
+          dashboard: {},
+          fruits: []
+        });
+        return false;
+      });
   },
 
   loadDashboard() {

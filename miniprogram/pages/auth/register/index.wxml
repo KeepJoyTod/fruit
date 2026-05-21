@@ -1,0 +1,19 @@
+<view class="page register-page">
+  <view class="header">
+    <text class="title">注册摊主</text>
+    <text class="subtitle">填写摊位资料后，就可以上架水果并出现在顾客端。</text>
+  </view>
+
+  <view class="form">
+    <input value="{{form.stallName}}" data-field="stallName" bindinput="onInput" placeholder="摊位名称" />
+    <input value="{{form.phone}}" data-field="phone" bindinput="onInput" placeholder="联系电话" type="number" />
+    <input value="{{form.address}}" data-field="address" bindinput="onInput" placeholder="摊位地址" />
+    <view class="location-row">
+      <input value="{{form.latitude}}" data-field="latitude" bindinput="onInput" placeholder="纬度" type="digit" />
+      <input value="{{form.longitude}}" data-field="longitude" bindinput="onInput" placeholder="经度" type="digit" />
+    </view>
+    <button class="ghost-button" bindtap="chooseLocation">选择摊位位置</button>
+  </view>
+
+  <button class="primary-button submit" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submit">完成注册</button>
+</view>

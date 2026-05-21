@@ -1,0 +1,53 @@
+.register-page {
+  padding: 40rpx 28rpx;
+}
+
+.header {
+  margin-bottom: 34rpx;
+}
+
+.title {
+  display: block;
+  color: #17251c;
+  font-size: 44rpx;
+  font-weight: 700;
+}
+
+.subtitle {
+  display: block;
+  margin-top: 14rpx;
+  color: #637166;
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+.form {
+  display: grid;
+  gap: 18rpx;
+}
+
+.form input {
+  width: 100%;
+  height: 84rpx;
+  padding: 0 18rpx;
+  box-sizing: border-box;
+  border: 1rpx solid #d8e2da;
+  border-radius: 10rpx;
+  background: #ffffff;
+  font-size: 28rpx;
+}
+
+.location-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18rpx;
+}
+
+.form button,
+.submit {
+  margin: 0;
+}
+
+.submit {
+  margin-top: 34rpx;
+}

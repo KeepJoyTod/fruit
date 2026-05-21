@@ -1,7 +1,27 @@
 const app = getApp();
 
-function login() {
+function saveToken(token) {
+  app.globalData.token = token;
+  wx.setStorageSync('token', token);
+}
+
+function clearToken() {
+  app.globalData.token = '';
+  wx.removeStorageSync('token');
+}
+
+function getStoredToken() {
   if (app.globalData.token) {
+    return app.globalData.token;
+  }
+  const token = wx.getStorageSync('token') || '';
+  app.globalData.token = token;
+  return token;
+}
+
+function login(options = {}) {
+  const token = getStoredToken();
+  if (!options.force && token) {
     return Promise.resolve(app.globalData.token);
   }
   return new Promise((resolve, reject) => {
@@ -21,7 +41,7 @@ function login() {
           success(res) {
             const body = res.data || {};
             if (res.statusCode >= 200 && res.statusCode < 300 && body.code === 0 && body.data && body.data.token) {
-              app.globalData.token = body.data.token;
+              saveToken(body.data.token);
               resolve(body.data.token);
               return;
             }
@@ -37,6 +57,7 @@ function login() {
 
 function request(options) {
   const url = `${app.globalData.apiBaseUrl}${options.url}`;
+  const showErrorToast = options.showErrorToast !== false;
   return login().then((token) => new Promise((resolve, reject) => {
     wx.request({
       url,
@@ -49,7 +70,7 @@ function request(options) {
       },
       success(res) {
         if (res.statusCode === 401) {
-          app.globalData.token = '';
+          clearToken();
         }
         const body = res.data || {};
         if (res.statusCode >= 200 && res.statusCode < 300 && body.code === 0) {
@@ -57,11 +78,15 @@ function request(options) {
           return;
         }
         const message = body.message || '请求失败';
-        wx.showToast({ title: message, icon: 'none' });
+        if (showErrorToast) {
+          wx.showToast({ title: message, icon: 'none' });
+        }
         reject(new Error(message));
       },
       fail(error) {
-        wx.showToast({ title: '网络连接失败', icon: 'none' });
+        if (showErrorToast) {
+          wx.showToast({ title: '网络连接失败', icon: 'none' });
+        }
         reject(error);
       }
     });
@@ -80,7 +105,7 @@ function uploadImage(filePath) {
       },
       success(res) {
         if (res.statusCode === 401) {
-          app.globalData.token = '';
+          clearToken();
         }
         let body = {};
         try {
@@ -106,6 +131,7 @@ function uploadImage(filePath) {
 }
 
 module.exports = {
+  clearToken,
   login,
   request,
   uploadImage

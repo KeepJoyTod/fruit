@@ -1,5 +1,7 @@
 {
   "pages": [
+    "pages/auth/login/index",
+    "pages/auth/register/index",
     "pages/customer/home/index",
     "pages/customer/detail/index",
     "pages/vendor/dashboard/index",

@@ -1,0 +1,12 @@
+<view class="page auth-page">
+  <view class="hero">
+    <text class="title">鲜果摊</text>
+    <text class="subtitle">登录后浏览今日鲜果，摊主可继续管理摊位和水果。</text>
+  </view>
+
+  <view class="actions">
+    <button class="primary-button" loading="{{loggingIn}}" disabled="{{loggingIn}}" bindtap="loginAsCustomer">微信一键登录</button>
+    <button class="ghost-button" loading="{{loggingIn}}" disabled="{{loggingIn}}" bindtap="loginAsVendor">摊主登录</button>
+    <button class="link-button" disabled="{{loggingIn}}" bindtap="goRegister">注册摊主</button>
+  </view>
+</view>

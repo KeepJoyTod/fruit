@@ -1,0 +1,50 @@
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 72rpx;
+  padding: 56rpx 40rpx;
+  background: #f6f8f5;
+}
+
+.hero {
+  padding-top: 80rpx;
+}
+
+.title {
+  display: block;
+  color: #17251c;
+  font-size: 58rpx;
+  font-weight: 700;
+}
+
+.subtitle {
+  display: block;
+  width: 560rpx;
+  max-width: 100%;
+  margin-top: 22rpx;
+  color: #5f6b63;
+  font-size: 30rpx;
+  line-height: 1.7;
+}
+
+.actions {
+  display: grid;
+  gap: 22rpx;
+}
+
+.actions button {
+  margin: 0;
+}
+
+.link-button {
+  height: 72rpx;
+  line-height: 72rpx;
+  background: transparent;
+  color: #1f7a4d;
+  font-size: 28rpx;
+}
+
+.link-button::after {
+  border: 0;
+}
