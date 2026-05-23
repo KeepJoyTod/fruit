@@ -1,0 +1,42 @@
+<view class="page category-page">
+  <block wx:if="{{category}}">
+    <view class="category-hero glass-panel">
+      <view class="hero-copy">
+        <view class="hero-label">Season Pick</view>
+        <view class="page-title">{{category.name}}</view>
+        <view class="category-subtitle" wx:if="{{category.subTitle}}">{{category.subTitle}}</view>
+        <view class="muted category-desc" wx:if="{{category.description}}">{{category.description}}</view>
+        <view class="hero-count">当前共 {{displayFruits.length}} 个商品</view>
+      </view>
+      <button class="ghost-button" bindtap="goSearch">搜索水果</button>
+    </view>
+
+    <view class="toolbar glass-panel">
+      <view class="toolbar-meta">排序方式</view>
+      <view class="sort-group">
+        <view class="sort-chip {{sortKey === 'default' ? 'is-active' : ''}}" data-sort="default" bindtap="changeSort">最新</view>
+        <view class="sort-chip {{sortKey === 'priceAsc' ? 'is-active' : ''}}" data-sort="priceAsc" bindtap="changeSort">价格低到高</view>
+        <view class="sort-chip {{sortKey === 'priceDesc' ? 'is-active' : ''}}" data-sort="priceDesc" bindtap="changeSort">价格高到低</view>
+      </view>
+    </view>
+
+    <view class="fruit-list" wx:if="{{!loading && displayFruits.length > 0}}">
+      <fruit-card
+        wx:for="{{displayFruits}}"
+        wx:key="_id"
+        fruit="{{item}}"
+        bind:tap="goDetail"
+      />
+    </view>
+
+    <view class="empty" wx:elif="{{!loading}}">当前分类下暂无商品</view>
+    <view class="muted placeholder" wx:else>加载中...</view>
+  </block>
+
+  <view class="empty-state" wx:elif="{{loaded}}">
+    <view class="page-title">分类未找到</view>
+    <view class="muted placeholder">请从首页重新选择分类</view>
+  </view>
+
+  <view class="muted placeholder" wx:else>加载中...</view>
+</view>

@@ -1,0 +1,102 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  margin-top: 32rpx;
+}
+
+.field,
+.textarea {
+  width: 100%;
+  padding: 24rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+}
+
+.field {
+  height: 88rpx;
+}
+
+.textarea {
+  min-height: 180rpx;
+}
+
+.image-picker {
+  width: 240rpx;
+  height: 240rpx;
+  border-radius: 8rpx;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.preview-image,
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+}
+
+.image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.image-tip {
+  font-size: 24rpx;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.tag {
+  height: 60rpx;
+  padding: 0 24rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+  color: #52606d;
+  line-height: 60rpx;
+}
+
+.tag.active {
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: 600;
+}
+
+.spec-item {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  padding: 20rpx;
+  border-radius: 8rpx;
+  background: #eef2f6;
+}
+
+.secondary-button {
+  height: 80rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+  color: #16a34a;
+  font-size: 28rpx;
+  line-height: 80rpx;
+}
+
+.secondary-button::after {
+  border: 0;
+}

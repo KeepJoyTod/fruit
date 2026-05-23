@@ -1,0 +1,97 @@
+.merchant-header {
+  margin-bottom: 32rpx;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+  margin-top: 24rpx;
+}
+
+.tool-button {
+  height: 80rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+  color: #1f2933;
+  font-size: 28rpx;
+  line-height: 80rpx;
+}
+
+.tool-button::after {
+  border: 0;
+}
+
+.empty {
+  padding: 96rpx 0;
+  color: #7b8794;
+  text-align: center;
+}
+
+.fruit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin-top: 32rpx;
+}
+
+.fruit-item {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+}
+
+.fruit-image {
+  flex: none;
+  width: 144rpx;
+  height: 144rpx;
+  border-radius: 8rpx;
+  background: #eef2f6;
+}
+
+.fruit-image-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7b8794;
+  font-size: 24rpx;
+}
+
+.fruit-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.fruit-name {
+  margin-bottom: 16rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.fruit-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.action-button {
+  width: 112rpx;
+  height: 56rpx;
+  margin: 0;
+  border-radius: 8rpx;
+  background: #eef2f6;
+  color: #1f2933;
+  font-size: 24rpx;
+  line-height: 56rpx;
+}
+
+.action-button.danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.action-button::after {
+  border: 0;
+}

@@ -1,0 +1,6 @@
+<view class="page">
+  <view class="page-title">Owner管理</view>
+  <view class="muted tip">仅店主可邀请或移除 Owner。</view>
+  <button class="primary-button" bindtap="createInvite">生成邀请链接</button>
+  <view class="empty" wx:if="{{owners.length === 0}}">暂无 Owner</view>
+</view>

@@ -1,0 +1,28 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  margin-top: 32rpx;
+}
+
+.field,
+.textarea {
+  width: 100%;
+  padding: 24rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+}
+
+.field {
+  height: 88rpx;
+}
+
+.textarea {
+  min-height: 160rpx;
+}
+
+.empty {
+  padding: 80rpx 0;
+  color: #7b8794;
+  text-align: center;
+}

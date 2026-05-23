@@ -1,0 +1,47 @@
+<view class="page">
+  <view class="page-title">编辑商品</view>
+  <view class="form" wx:if="{{formReady}}">
+    <input class="field" placeholder="商品名称" value="{{form.name}}" bindinput="onNameInput" />
+
+    <view class="section">
+      <view class="section-title">主图</view>
+      <view class="image-picker" bindtap="chooseMainImage">
+        <image class="preview-image" src="{{displayImage}}" mode="aspectFill" wx:if="{{displayImage}}" />
+        <view class="image-placeholder" wx:else>选择主图</view>
+      </view>
+    </view>
+
+    <input class="field" placeholder="产地（可选）" value="{{form.origin}}" bindinput="onOriginInput" />
+    <textarea class="textarea" placeholder="商品描述" value="{{form.description}}" bindinput="onDescriptionInput" />
+
+    <view class="section">
+      <view class="section-title">标签</view>
+      <view class="tag-list">
+        <view
+          class="tag {{selectedTagMap[item] ? 'active' : ''}}"
+          wx:for="{{tags}}"
+          wx:key="*this"
+          data-tag="{{item}}"
+          bindtap="toggleTag"
+        >
+          {{item}}
+        </view>
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">规格</view>
+      <view class="spec-item" wx:for="{{form.specs}}" wx:key="index">
+        <input class="field" placeholder="规格名，如大果" value="{{item.name}}" data-index="{{index}}" data-field="name" bindinput="onSpecInput" />
+        <input class="field" placeholder="重量，如2-3斤" value="{{item.weight}}" data-index="{{index}}" data-field="weight" bindinput="onSpecInput" />
+        <input class="field" type="digit" placeholder="价格" value="{{item.price}}" data-index="{{index}}" data-field="price" bindinput="onSpecInput" />
+        <input class="field" type="number" placeholder="库存" value="{{item.stock}}" data-index="{{index}}" data-field="stock" bindinput="onSpecInput" />
+      </view>
+      <button class="secondary-button" bindtap="addSpec">添加规格</button>
+    </view>
+
+    <button class="primary-button" loading="{{saving}}" disabled="{{saving}}" bindtap="submit">保存修改</button>
+  </view>
+
+  <view class="muted placeholder" wx:else>加载中...</view>
+</view>

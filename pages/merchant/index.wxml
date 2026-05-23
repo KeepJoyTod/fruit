@@ -1,0 +1,32 @@
+<view class="page merchant-page">
+  <view class="merchant-header">
+    <view>
+      <view class="page-title">{{shopName}}</view>
+      <view class="muted">商家管理台{{roleText}}</view>
+    </view>
+  </view>
+
+  <button class="primary-button" bindtap="goPublish">上传水果</button>
+
+  <view class="toolbar">
+    <button class="tool-button" bindtap="goCategoryManage">分类管理</button>
+    <button class="tool-button" bindtap="goOwnerManage">Owner管理</button>
+  </view>
+
+  <view class="fruit-list" wx:if="{{fruits.length > 0}}">
+    <view class="fruit-item" wx:for="{{fruits}}" wx:key="_id">
+      <image class="fruit-image" src="{{item.mainImage}}" mode="aspectFill" wx:if="{{item.mainImage}}" />
+      <view class="fruit-image fruit-image-empty" wx:else>无图</view>
+      <view class="fruit-content">
+        <view class="fruit-name">{{item.name}}</view>
+        <view class="muted">{{item.specCount}} 个规格 · ￥{{item.minPrice}}</view>
+        <view class="fruit-actions">
+          <button class="action-button" data-id="{{item._id}}" bindtap="goEdit">编辑</button>
+          <button class="action-button danger" data-id="{{item._id}}" data-name="{{item.name}}" bindtap="confirmDelete">删除</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:else>暂无商品，先上传一个水果吧</view>
+</view>

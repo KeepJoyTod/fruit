@@ -1,0 +1,14 @@
+.login-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-tip {
+  margin-top: 20rpx;
+  margin-bottom: 48rpx;
+}
+
+.login-button {
+  width: 100%;
+}

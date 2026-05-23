@@ -1,0 +1,10 @@
+.tip {
+  margin-top: 20rpx;
+  margin-bottom: 32rpx;
+}
+
+.empty {
+  padding: 80rpx 0;
+  color: #7b8794;
+  text-align: center;
+}

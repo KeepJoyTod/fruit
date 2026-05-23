@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "水果小程序",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "fruit-card": "/components/fruit-card/index"
+  }
+}

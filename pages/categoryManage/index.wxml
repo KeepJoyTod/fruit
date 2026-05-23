@@ -1,0 +1,10 @@
+<view class="page">
+  <view class="page-title">分类管理</view>
+  <view class="form">
+    <input class="field" placeholder="一级分类名称" value="{{form.name}}" bindinput="onNameInput" />
+    <input class="field" placeholder="二级标题（可选）" value="{{form.subTitle}}" bindinput="onSubTitleInput" />
+    <textarea class="textarea" placeholder="分类描述（可选）" value="{{form.description}}" bindinput="onDescriptionInput" />
+    <button class="primary-button" bindtap="submit">保存分类</button>
+  </view>
+  <view class="empty" wx:if="{{categories.length === 0}}">暂无分类</view>
+</view>

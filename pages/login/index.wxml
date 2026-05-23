@@ -1,0 +1,7 @@
+<view class="page login-page">
+  <view class="page-title">商家登录</view>
+  <view class="muted login-tip">登录后可发布水果、管理分类和维护店铺。</view>
+  <button class="primary-button login-button" loading="{{loading}}" disabled="{{loading}}" bindtap="handleLogin">
+    微信登录
+  </button>
+</view>
