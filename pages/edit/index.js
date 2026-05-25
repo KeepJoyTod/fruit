@@ -27,6 +27,17 @@ function mapSelectedCategories(categoryIds) {
   }, {});
 }
 
+function redirectToMerchantHome() {
+  wx.redirectTo({
+    url: "/pages/merchant/index",
+    fail: () => {
+      wx.reLaunch({
+        url: "/pages/merchant/index"
+      });
+    }
+  });
+}
+
 Page({
   data: {
     tags: TAGS,
@@ -398,7 +409,7 @@ Page({
       });
 
       app.globalData.shouldRefreshHomeFruits = true;
-      wx.navigateBack();
+      redirectToMerchantHome();
     } catch (error) {
       console.error("update fruit failed", error);
       wx.showToast({

@@ -4,7 +4,9 @@
       <image class="shop-logo" src="{{shopLogo}}" mode="aspectFill" wx:if="{{shopLogo}}" />
       <view class="shop-logo-placeholder" wx:else>{{shopInitial}}</view>
       <view class="hero-heading">
-        <view class="hero-badge {{businessStatus === 'closed' ? 'closed' : ''}}">{{businessStatus === 'closed' ? '休息中' : '营业中'}}</view>
+        <view class="hero-badge {{businessStatus === 'closed' ? 'closed' : ''}}">
+          {{businessStatus === 'closed' ? '休息中' : '营业中'}}
+        </view>
         <view class="page-title hero-title">{{shopName}}</view>
       </view>
     </view>
@@ -43,7 +45,8 @@
   <view class="home-section">
     <view class="section-heading">
       <view>
- 
+        <view class="section-heading-title">水果分类</view>
+        <view class="section-heading-copy">按品类快速查看在售水果</view>
       </view>
     </view>
     <scroll-view class="category-scroll" scroll-x wx:if="{{categories.length > 0}}">
@@ -52,6 +55,7 @@
         <view class="category-pill-tip">立即查看</view>
       </view>
     </scroll-view>
+    <view class="category-placeholder muted" wx:else>暂无分类</view>
   </view>
 
   <view class="home-section">

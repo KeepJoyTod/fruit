@@ -1,5 +1,16 @@
 const app = getApp();
 
+function redirectToMerchantHome() {
+  wx.redirectTo({
+    url: "/pages/merchant/index",
+    fail: () => {
+      wx.reLaunch({
+        url: "/pages/merchant/index"
+      });
+    }
+  });
+}
+
 Page({
   data: {
     saving: false,
@@ -82,6 +93,7 @@ Page({
         title: "已发布",
         icon: "success"
       });
+      redirectToMerchantHome();
     } catch (error) {
       console.error("publish announcement failed", error);
       wx.showToast({

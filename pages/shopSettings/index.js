@@ -13,6 +13,17 @@ function createForm(shop) {
   };
 }
 
+function redirectToMerchantHome() {
+  wx.redirectTo({
+    url: "/pages/merchant/index",
+    fail: () => {
+      wx.reLaunch({
+        url: "/pages/merchant/index"
+      });
+    }
+  });
+}
+
 Page({
   data: {
     saving: false,
@@ -161,6 +172,7 @@ Page({
         title: "已保存",
         icon: "success"
       });
+      redirectToMerchantHome();
     } catch (error) {
       console.error("update shop failed", error);
       wx.showToast({

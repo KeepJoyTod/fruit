@@ -10,6 +10,17 @@ function createEmptyForm() {
   };
 }
 
+function redirectToMerchantHome() {
+  wx.redirectTo({
+    url: "/pages/merchant/index",
+    fail: () => {
+      wx.reLaunch({
+        url: "/pages/merchant/index"
+      });
+    }
+  });
+}
+
 Page({
   data: {
     loading: false,
@@ -182,7 +193,8 @@ Page({
         editing: false,
         form: createEmptyForm()
       });
-      await this.loadCategories();
+      app.globalData.shouldRefreshHomeFruits = true;
+      redirectToMerchantHome();
     } catch (error) {
       console.error("save category failed", error);
       wx.showToast({
@@ -238,7 +250,8 @@ Page({
         this.cancelEdit();
       }
 
-      await this.loadCategories();
+      app.globalData.shouldRefreshHomeFruits = true;
+      redirectToMerchantHome();
     } catch (error) {
       console.error("delete category failed", error);
       wx.showToast({

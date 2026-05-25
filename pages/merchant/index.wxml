@@ -56,9 +56,15 @@
     </view>
   </view>
 
-  <view class="notice-bar" bindtap="goAnnouncementManage">
-    <view class="notice-icon">告</view>
-    <view class="notice-text">{{announcement || '暂无公告，点击编辑并发布店铺公告。'}}</view>
+  <view class="notice-card" bindtap="goAnnouncementManage">
+    <view class="notice-mark">
+      <view class="notice-mark-main">公告</view>
+      <view class="notice-mark-sub">{{announcement ? '已发布' : '待发布'}}</view>
+    </view>
+    <view class="notice-content">
+      <view class="notice-title">店铺公告</view>
+      <view class="notice-text">{{announcement || '暂无公告，点击编辑并发布店铺公告。'}}</view>
+    </view>
     <button class="notice-link" bindtap="goAnnouncementManage">编辑</button>
   </view>
 

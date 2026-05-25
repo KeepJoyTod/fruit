@@ -1,6 +1,14 @@
 const app = getApp();
 const { getMinPrice, formatPrice, pickFruitMainImage } = require("../../utils/fruit");
 
+const BASE_MANAGEMENT_ITEMS = [
+  { key: "category", label: "分类管理", icon: "#", tone: "green" },
+  { key: "shop", label: "店铺设置", icon: "店", tone: "blue" },
+  { key: "announcement", label: "公告编辑", icon: "告", tone: "purple" }
+];
+
+const CREATOR_MANAGEMENT_ITEM = { key: "owner", label: "团队管理", icon: "人", tone: "orange" };
+
 Page({
   data: {
     shopName: app.globalData.shopName,
@@ -19,13 +27,7 @@ Page({
       offSale: 0,
       lowStock: 0
     },
-    managementItems: [
-      { key: "publish", label: "新增商品", icon: "+", tone: "amber" },
-      { key: "category", label: "分类管理", icon: "#", tone: "green" },
-      { key: "shop", label: "店铺设置", icon: "店", tone: "blue" },
-      { key: "announcement", label: "公告编辑", icon: "告", tone: "purple" },
-      { key: "owner", label: "团队管理", icon: "人", tone: "orange" }
-    ]
+    managementItems: BASE_MANAGEMENT_ITEMS
   },
 
   onShow() {
@@ -42,14 +44,18 @@ Page({
       return;
     }
 
+    const role = user && user.role ? user.role : "";
+    const isCreator = role === "creator" || shop.creatorId === (user && user.openid);
+
     this.setData({
       shopName: shop.name || shopName,
       shopInitial: (shop.name || shopName || "店").slice(0, 1),
       shopLogo: shop.logo || shopLogo,
       businessStatus: shop.businessStatus || "open",
       announcement: shop.announcement || "",
-      role: user && user.role ? user.role : "",
-      roleText: user && user.role ? ` · ${user.role}` : ""
+      role,
+      roleText: role ? ` · ${role}` : "",
+      managementItems: isCreator ? BASE_MANAGEMENT_ITEMS.concat(CREATOR_MANAGEMENT_ITEM) : BASE_MANAGEMENT_ITEMS
     });
 
     this.loadFruits();
@@ -172,11 +178,6 @@ Page({
       this.goAnnouncementManage();
     } else if (key === "owner") {
       this.goOwnerManage();
-    } else {
-      wx.showToast({
-        title: "该功能稍后接入",
-        icon: "none"
-      });
     }
   },
 
