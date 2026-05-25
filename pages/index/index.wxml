@@ -1,8 +1,21 @@
 <view class="page home-page">
   <view class="hero-card glass-panel">
-    <view class="hero-badge">Fresh Today</view>
-    <view class="page-title hero-title">{{shopName}}</view>
+    <view class="hero-top">
+      <image class="shop-logo" src="{{shopLogo}}" mode="aspectFill" wx:if="{{shopLogo}}" />
+      <view class="shop-logo-placeholder" wx:else>{{shopInitial}}</view>
+      <view class="hero-heading">
+        <view class="hero-badge {{businessStatus === 'closed' ? 'closed' : ''}}">{{businessStatus === 'closed' ? '休息中' : '营业中'}}</view>
+        <view class="page-title hero-title">{{shopName}}</view>
+      </view>
+    </view>
+
     <view class="hero-subtitle">把当季水果装进今天的好心情，现挑现看，更新更快。</view>
+
+    <view class="shop-meta" wx:if="{{contactPhone || address}}">
+      <view wx:if="{{contactPhone}}">电话：{{contactPhone}}</view>
+      <view wx:if="{{address}}">地址：{{address}}</view>
+    </view>
+
     <view class="hero-stats">
       <view class="hero-stat">
         <view class="hero-stat-value">{{categories.length}}</view>
@@ -16,6 +29,14 @@
     <view class="hero-actions">
       <button class="primary-button hero-primary" bindtap="goSearch">搜索水果</button>
       <button class="icon-button hero-secondary" bindtap="goLogin">商家入口</button>
+    </view>
+  </view>
+
+  <view class="announcement-section" wx:if="{{announcement}}">
+    <view class="announcement-icon">告</view>
+    <view class="announcement-content">
+      <view class="announcement-title">店铺公告</view>
+      <view class="announcement-text">{{announcement}}</view>
     </view>
   </view>
 

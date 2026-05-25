@@ -1,0 +1,94 @@
+.announcement-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.announcement-card,
+.preview-card {
+  padding: 28rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+}
+
+.card-title {
+  color: #243126;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.card-copy {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+}
+
+.announcement-textarea {
+  width: 100%;
+  min-height: 260rpx;
+  padding: 24rpx;
+  margin-top: 24rpx;
+  border-radius: 8rpx;
+  background: #f6f7f9;
+  color: #243126;
+  line-height: 1.6;
+}
+
+.textarea-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12rpx;
+  color: #9aa5b1;
+  font-size: 22rpx;
+}
+
+.preview-notice {
+  display: flex;
+  gap: 18rpx;
+  padding: 22rpx;
+  margin-top: 22rpx;
+  border-radius: 8rpx;
+  background: #fff7ed;
+}
+
+.preview-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: rgba(255, 138, 61, 0.14);
+  color: #d46b1f;
+  font-weight: 800;
+}
+
+.preview-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.preview-title {
+  color: #243126;
+  font-size: 27rpx;
+  font-weight: 800;
+}
+
+.preview-text {
+  margin-top: 8rpx;
+  color: #52616b;
+  font-size: 25rpx;
+  line-height: 1.55;
+  word-break: break-all;
+}
+
+.action-row {
+  display: grid;
+  grid-template-columns: 180rpx 1fr;
+  gap: 18rpx;
+}
+
+.clear-button,
+.publish-button {
+  margin: 0;
+}

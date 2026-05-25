@@ -14,6 +14,12 @@ function updateCategoryCache(categories) {
 Page({
   data: {
     shopName: app.globalData.shopName,
+    shopInitial: "店",
+    shopLogo: app.globalData.shopLogo,
+    announcement: "",
+    contactPhone: "",
+    address: "",
+    businessStatus: "open",
     loading: false,
     hasLoaded: false,
     categories: [],
@@ -38,7 +44,7 @@ Page({
     this.setData({ loading: true });
 
     try {
-      await Promise.all([this.loadCategories(), this.loadFruits()]);
+      await Promise.all([this.loadShop(), this.loadCategories(), this.loadFruits()]);
       app.globalData.shouldRefreshHomeFruits = false;
       this.setData({
         hasLoaded: true
@@ -47,6 +53,35 @@ Page({
       console.error("load home data failed", error);
     } finally {
       this.setData({ loading: false });
+    }
+  },
+
+  async loadShop() {
+    try {
+      const result = await wx.cloud.callFunction({
+        name: "getPublicShop"
+      });
+      const data = result.result;
+
+      if (!data || !data.success || !data.shop) {
+        return;
+      }
+
+      const shop = data.shop;
+      app.globalData.shopName = shop.name || app.globalData.shopName;
+      app.globalData.shopLogo = shop.logo || "";
+
+      this.setData({
+        shopName: shop.name || app.globalData.shopName,
+        shopInitial: (shop.name || app.globalData.shopName || "店").slice(0, 1),
+        shopLogo: shop.logo || "",
+        announcement: shop.announcement || "",
+        contactPhone: shop.contactPhone || "",
+        address: shop.address || "",
+        businessStatus: shop.businessStatus || "open"
+      });
+    } catch (error) {
+      console.error("load public shop failed", error);
     }
   },
 

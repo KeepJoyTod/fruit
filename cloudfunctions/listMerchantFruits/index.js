@@ -50,7 +50,10 @@ exports.main = async (event) => {
 
     return {
       success: true,
-      fruits: result.data
+      fruits: (result.data || []).map((fruit) => ({
+        ...fruit,
+        status: fruit.status || "on_sale"
+      }))
     };
   } catch (error) {
     return {

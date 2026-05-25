@@ -31,6 +31,18 @@ function normalizeStringList(list) {
   return list.map((item) => String(item || "").trim()).filter(Boolean);
 }
 
+function normalizeImageList(list) {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+
+  return list.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 9);
+}
+
+function normalizeStatus(value) {
+  return value === "off_sale" ? "off_sale" : "on_sale";
+}
+
 async function assertCanManageShop(openid, shopId) {
   const shopResult = await shops.doc(shopId).get();
   const shop = shopResult.data;
@@ -51,9 +63,11 @@ exports.main = async (event) => {
   const description = String(payload.description || "").trim();
   const origin = String(payload.origin || "").trim();
   const mainImage = String(payload.mainImage || "").trim();
+  const detailImages = normalizeImageList(payload.detailImages);
   const categoryIds = normalizeStringList(payload.categoryIds);
   const tags = normalizeStringList(payload.tags);
   const specs = normalizeSpecs(payload.specs);
+  const status = normalizeStatus(payload.status);
 
   if (!openid) {
     return {
@@ -99,9 +113,11 @@ exports.main = async (event) => {
         categoryIds,
         tags,
         mainImage,
+        detailImages,
         description,
         origin,
         specs,
+        status,
         updateTime: now
       }
     });

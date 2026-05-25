@@ -28,7 +28,9 @@ function escapeRegExp(text) {
 }
 
 function buildQueryCondition(keyword, categoryId) {
-  const condition = {};
+  const condition = {
+    status: "on_sale"
+  };
 
   if (keyword) {
     condition.name = db.RegExp({
@@ -100,6 +102,7 @@ exports.main = async (event) => {
         mainImage: true,
         origin: true,
         specs: true,
+        status: true,
         categoryIds: true,
         createTime: true
       })
@@ -126,6 +129,7 @@ exports.main = async (event) => {
         mainImage: fruit.mainImage || "",
         origin: fruit.origin || "",
         minPrice: getMinPrice(fruit.specs),
+        status: fruit.status || "on_sale",
         categoryIds: fruit.categoryIds || [],
         createTime: fruit.createTime
       }))

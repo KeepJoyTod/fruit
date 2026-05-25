@@ -1,10 +1,38 @@
-<view class="page">
+<view class="page category-manage-page">
   <view class="page-title">分类管理</view>
-  <view class="form">
-    <input class="field" placeholder="一级分类名称" value="{{form.name}}" bindinput="onNameInput" />
-    <input class="field" placeholder="二级标题（可选）" value="{{form.subTitle}}" bindinput="onSubTitleInput" />
+
+  <view class="form glass-panel">
+    <view class="form-heading">{{editing ? '编辑分类' : '新增分类'}}</view>
+    <input class="field" placeholder="分类名称" value="{{form.name}}" bindinput="onNameInput" />
+    <input class="field" placeholder="副标题（可选）" value="{{form.subTitle}}" bindinput="onSubTitleInput" />
+    <input class="field" type="number" placeholder="排序值，数字越小越靠前" value="{{form.sort}}" bindinput="onSortInput" />
     <textarea class="textarea" placeholder="分类描述（可选）" value="{{form.description}}" bindinput="onDescriptionInput" />
-    <button class="primary-button" bindtap="submit">保存分类</button>
+    <view class="form-actions">
+      <button class="primary-button save-button" loading="{{saving}}" disabled="{{saving}}" bindtap="submit">保存分类</button>
+      <button class="secondary-button cancel-button" wx:if="{{editing}}" bindtap="cancelEdit">取消</button>
+    </view>
   </view>
-  <view class="empty" wx:if="{{categories.length === 0}}">暂无分类</view>
+
+  <view class="section-heading">
+    <view class="section-heading-title">当前分类</view>
+    <view class="section-chip" wx:if="{{categories.length > 0}}">{{categories.length}} 个</view>
+  </view>
+
+  <view class="category-list" wx:if="{{categories.length > 0}}">
+    <view class="category-item" wx:for="{{categories}}" wx:key="_id">
+      <view class="category-content">
+        <view class="category-name">{{item.name}}</view>
+        <view class="muted" wx:if="{{item.subTitle}}">{{item.subTitle}}</view>
+        <view class="category-desc" wx:if="{{item.description}}">{{item.description}}</view>
+        <view class="category-sort">排序 {{item.sort}}</view>
+      </view>
+      <view class="category-actions">
+        <button class="action-button" data-id="{{item._id}}" bindtap="editCategory">编辑</button>
+        <button class="action-button danger" data-id="{{item._id}}" data-name="{{item.name}}" bindtap="confirmDelete">删除</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:elif="{{!loading}}">暂无分类，先新增一个吧</view>
+  <view class="muted placeholder" wx:else>加载中...</view>
 </view>

@@ -9,6 +9,8 @@
     "pages/publish/index",
     "pages/edit/index",
     "pages/categoryManage/index",
+    "pages/shopSettings/index",
+    "pages/announcementManage/index",
     "pages/ownerManage/index"
   ],
   "window": {

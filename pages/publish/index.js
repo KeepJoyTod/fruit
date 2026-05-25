@@ -1,6 +1,8 @@
 const app = getApp();
 const { TAGS } = require("../../utils/constants");
 
+const MAX_DETAIL_IMAGES = 9;
+
 function createEmptySpec() {
   return {
     name: "",
@@ -13,8 +15,11 @@ function createEmptySpec() {
 Page({
   data: {
     tags: TAGS,
+    categories: [],
     selectedTagMap: {},
+    selectedCategoryMap: {},
     saving: false,
+    detailImageTemps: [],
     form: {
       name: "",
       mainImage: "",
@@ -22,7 +27,41 @@ Page({
       origin: "",
       description: "",
       tags: [],
+      categoryIds: [],
+      status: "on_sale",
       specs: [createEmptySpec()]
+    }
+  },
+
+  onShow() {
+    this.loadCategories();
+  },
+
+  async loadCategories() {
+    const shop = app.globalData.shop;
+
+    if (!shop || !shop._id) {
+      return;
+    }
+
+    try {
+      const result = await wx.cloud.callFunction({
+        name: "listMerchantCategories",
+        data: {
+          shopId: shop._id
+        }
+      });
+      const data = result.result;
+
+      if (!data || !data.success) {
+        throw new Error((data && data.message) || "分类加载失败");
+      }
+
+      this.setData({
+        categories: data.categories || []
+      });
+    } catch (error) {
+      console.error("load publish categories failed", error);
     }
   },
 
@@ -75,20 +114,83 @@ Page({
     }
   },
 
+  async chooseDetailImages() {
+    const remainCount = MAX_DETAIL_IMAGES - this.data.detailImageTemps.length;
+
+    if (remainCount <= 0) {
+      wx.showToast({
+        title: "最多上传9张详情图",
+        icon: "none"
+      });
+      return;
+    }
+
+    try {
+      const result = await wx.chooseMedia({
+        count: remainCount,
+        mediaType: ["image"],
+        sourceType: ["album", "camera"],
+        sizeType: ["compressed"]
+      });
+      const paths = (result.tempFiles || []).map((file) => file.tempFilePath).filter(Boolean);
+
+      if (paths.length === 0) {
+        return;
+      }
+
+      this.setData({
+        detailImageTemps: this.data.detailImageTemps.concat(paths).slice(0, MAX_DETAIL_IMAGES)
+      });
+    } catch (error) {
+      if (error && error.errMsg && error.errMsg.includes("cancel")) {
+        return;
+      }
+
+      console.error("choose detail images failed", error);
+      wx.showToast({
+        title: "选择详情图失败",
+        icon: "none"
+      });
+    }
+  },
+
+  removeDetailImage(event) {
+    const index = Number(event.currentTarget.dataset.index);
+    const detailImageTemps = this.data.detailImageTemps.slice();
+    detailImageTemps.splice(index, 1);
+    this.setData({ detailImageTemps });
+  },
+
+  async uploadImage(filePath, folder) {
+    const extMatch = filePath.match(/\.[^.]+$/);
+    const ext = extMatch ? extMatch[0] : ".jpg";
+    const shopId = app.globalData.shop && app.globalData.shop._id ? app.globalData.shop._id : "unknown";
+    const cloudPath = `fruits/${shopId}/${folder}/${Date.now()}-${Math.random().toString(16).slice(2)}${ext}`;
+    const result = await wx.cloud.uploadFile({
+      cloudPath,
+      filePath
+    });
+
+    return result.fileID;
+  },
+
   async uploadMainImage() {
     if (!this.data.form.mainImageTemp) {
       return "";
     }
 
-    const extMatch = this.data.form.mainImageTemp.match(/\.[^.]+$/);
-    const ext = extMatch ? extMatch[0] : ".jpg";
-    const cloudPath = `fruits/${app.globalData.shop._id}/${Date.now()}-${Math.random().toString(16).slice(2)}${ext}`;
-    const result = await wx.cloud.uploadFile({
-      cloudPath,
-      filePath: this.data.form.mainImageTemp
-    });
+    return this.uploadImage(this.data.form.mainImageTemp, "main");
+  },
 
-    return result.fileID;
+  async uploadDetailImages() {
+    const paths = this.data.detailImageTemps || [];
+    const uploaded = [];
+
+    for (const path of paths) {
+      uploaded.push(await this.uploadImage(path, "detail"));
+    }
+
+    return uploaded;
   },
 
   onSpecInput(event) {
@@ -120,6 +222,22 @@ Page({
     this.setData({
       selectedTagMap,
       "form.tags": Object.keys(selectedTagMap)
+    });
+  },
+
+  toggleCategory(event) {
+    const categoryId = event.currentTarget.dataset.id;
+    const selectedCategoryMap = Object.assign({}, this.data.selectedCategoryMap);
+
+    if (selectedCategoryMap[categoryId]) {
+      delete selectedCategoryMap[categoryId];
+    } else {
+      selectedCategoryMap[categoryId] = true;
+    }
+
+    this.setData({
+      selectedCategoryMap,
+      "form.categoryIds": Object.keys(selectedCategoryMap)
     });
   },
 
@@ -165,6 +283,7 @@ Page({
 
     try {
       const mainImage = this.data.form.mainImage || (await this.uploadMainImage());
+      const detailImages = await this.uploadDetailImages();
 
       const result = await wx.cloud.callFunction({
         name: "createFruit",
@@ -172,9 +291,12 @@ Page({
           shopId: app.globalData.shop._id,
           name: this.data.form.name,
           mainImage,
+          detailImages,
           origin: this.data.form.origin,
           description: this.data.form.description,
+          categoryIds: this.data.form.categoryIds,
           tags: this.data.form.tags,
+          status: this.data.form.status,
           specs: this.data.form.specs
         }
       });

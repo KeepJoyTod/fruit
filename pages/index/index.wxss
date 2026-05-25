@@ -32,6 +32,37 @@
   background: rgba(47, 158, 68, 0.12);
 }
 
+.hero-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.shop-logo,
+.shop-logo-placeholder {
+  flex: none;
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+}
+
+.shop-logo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f766e;
+  font-size: 42rpx;
+  font-weight: 800;
+}
+
+.hero-heading {
+  min-width: 0;
+  flex: 1;
+}
+
 .hero-badge {
   position: relative;
   z-index: 1;
@@ -47,10 +78,16 @@
   letter-spacing: 1rpx;
 }
 
+.hero-badge.closed {
+  background: rgba(148, 163, 184, 0.18);
+  color: #52616b;
+}
+
 .hero-title {
   position: relative;
   z-index: 1;
-  margin-top: 22rpx;
+  margin-top: 14rpx;
+  word-break: break-all;
 }
 
 .hero-subtitle {
@@ -60,6 +97,58 @@
   margin-top: 16rpx;
   color: #62735f;
   line-height: 1.7;
+}
+
+.shop-meta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  margin-top: 14rpx;
+  color: #7c8b7a;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.announcement-section {
+  display: flex;
+  gap: 18rpx;
+  padding: 24rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+}
+
+.announcement-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background: rgba(255, 138, 61, 0.14);
+  color: #d46b1f;
+  font-weight: 800;
+}
+
+.announcement-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.announcement-title {
+  color: #243126;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.announcement-text {
+  margin-top: 8rpx;
+  color: #52616b;
+  font-size: 25rpx;
+  line-height: 1.55;
+  word-break: break-all;
 }
 
 .hero-stats {

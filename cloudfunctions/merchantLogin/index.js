@@ -56,6 +56,10 @@ exports.main = async () => {
     data: {
       name: DEFAULT_SHOP_NAME,
       logo: DEFAULT_SHOP_LOGO,
+      announcement: "",
+      contactPhone: "",
+      address: "",
+      businessStatus: "open",
       creatorId: openid,
       ownerIds: [openid],
       createTime: now,

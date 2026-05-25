@@ -9,6 +9,7 @@ const fruits = db.collection("fruits");
 
 exports.main = async (event) => {
   const fruitId = String((event && event.fruitId) || "").trim();
+  const includeOffSale = Boolean(event && event.includeOffSale);
 
   if (!fruitId) {
     return {
@@ -28,6 +29,13 @@ exports.main = async (event) => {
       };
     }
 
+    if (fruit.status === "off_sale" && !includeOffSale) {
+      return {
+        success: false,
+        message: "商品已下架"
+      };
+    }
+
     return {
       success: true,
       fruit: {
@@ -41,6 +49,7 @@ exports.main = async (event) => {
         description: fruit.description || "",
         origin: fruit.origin || "",
         specs: fruit.specs || [],
+        status: fruit.status || "on_sale",
         createTime: fruit.createTime,
         updateTime: fruit.updateTime
       }

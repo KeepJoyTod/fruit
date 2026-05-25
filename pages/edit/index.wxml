@@ -11,8 +11,39 @@
       </view>
     </view>
 
+    <view class="section">
+      <view class="section-title">详情图</view>
+      <view class="detail-image-list">
+        <view class="detail-image-item" wx:for="{{detailImages}}" wx:key="*this">
+          <image class="detail-preview-image" src="{{item}}" mode="aspectFill" />
+          <button class="remove-image" data-index="{{index}}" bindtap="removeExistingDetailImage">×</button>
+        </view>
+        <view class="detail-image-item" wx:for="{{detailImageTemps}}" wx:key="*this">
+          <image class="detail-preview-image" src="{{item}}" mode="aspectFill" />
+          <button class="remove-image" data-index="{{index}}" bindtap="removeNewDetailImage">×</button>
+        </view>
+        <view class="detail-image-add" bindtap="chooseDetailImages" wx:if="{{detailImages.length + detailImageTemps.length < 9}}">添加图片</view>
+      </view>
+      <view class="muted image-tip">可上传最多9张，用于商品详情页展示</view>
+    </view>
+
     <input class="field" placeholder="产地（可选）" value="{{form.origin}}" bindinput="onOriginInput" />
     <textarea class="textarea" placeholder="商品描述" value="{{form.description}}" bindinput="onDescriptionInput" />
+
+    <view class="section" wx:if="{{categories.length > 0}}">
+      <view class="section-title">分类</view>
+      <view class="tag-list">
+        <view
+          class="tag {{selectedCategoryMap[item._id] ? 'active' : ''}}"
+          wx:for="{{categories}}"
+          wx:key="_id"
+          data-id="{{item._id}}"
+          bindtap="toggleCategory"
+        >
+          {{item.name}}
+        </view>
+      </view>
+    </view>
 
     <view class="section">
       <view class="section-title">标签</view>
@@ -32,7 +63,7 @@
     <view class="section">
       <view class="section-title">规格</view>
       <view class="spec-item" wx:for="{{form.specs}}" wx:key="index">
-        <input class="field" placeholder="规格名，如大果" value="{{item.name}}" data-index="{{index}}" data-field="name" bindinput="onSpecInput" />
+        <input class="field" placeholder="规格名称，如大果" value="{{item.name}}" data-index="{{index}}" data-field="name" bindinput="onSpecInput" />
         <input class="field" placeholder="重量，如2-3斤" value="{{item.weight}}" data-index="{{index}}" data-field="weight" bindinput="onSpecInput" />
         <input class="field" type="digit" placeholder="价格" value="{{item.price}}" data-index="{{index}}" data-field="price" bindinput="onSpecInput" />
         <input class="field" type="number" placeholder="库存" value="{{item.stock}}" data-index="{{index}}" data-field="stock" bindinput="onSpecInput" />
