@@ -188,6 +188,7 @@ exports.main = async () => {
         description: seed.description,
         origin: seed.origin,
         specs: seed.specs,
+        status: "on_sale",
         createTime: now,
         updateTime: now
       }));

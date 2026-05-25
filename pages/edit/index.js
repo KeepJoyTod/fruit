@@ -1,5 +1,6 @@
 const app = getApp();
 const { TAGS } = require("../../utils/constants");
+const { normalizeImageList, pickFruitMainImage } = require("../../utils/fruit");
 
 const MAX_DETAIL_IMAGES = 9;
 
@@ -116,17 +117,19 @@ Page({
 
       const fruit = data.fruit;
       const specs = Array.isArray(fruit.specs) && fruit.specs.length > 0 ? fruit.specs : [createEmptySpec()];
+      const mainImage = pickFruitMainImage(fruit);
+      const detailImages = normalizeImageList(fruit.detailImages);
 
       this.setData({
         formReady: true,
-        displayImage: fruit.mainImage || "",
-        detailImages: fruit.detailImages || [],
+        displayImage: mainImage,
+        detailImages,
         detailImageTemps: [],
         selectedTagMap: mapSelectedTags(fruit.tags),
         selectedCategoryMap: mapSelectedCategories(fruit.categoryIds),
         form: {
           name: fruit.name || "",
-          mainImage: fruit.mainImage || "",
+          mainImage,
           mainImageTemp: "",
           origin: fruit.origin || "",
           description: fruit.description || "",

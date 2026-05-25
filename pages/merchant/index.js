@@ -1,5 +1,5 @@
 const app = getApp();
-const { getMinPrice, formatPrice } = require("../../utils/fruit");
+const { getMinPrice, formatPrice, pickFruitMainImage } = require("../../utils/fruit");
 
 Page({
   data: {
@@ -99,6 +99,7 @@ Page({
 
     return {
       ...fruit,
+      mainImage: pickFruitMainImage(fruit),
       status,
       statusText: status === "off_sale" ? "已下架" : "上架中",
       statusClass: status === "off_sale" ? "off" : "on",

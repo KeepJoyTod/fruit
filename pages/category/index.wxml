@@ -12,7 +12,20 @@
     </view>
 
     <view class="toolbar glass-panel">
-      <view class="toolbar-meta">排序方式</view>
+      <view class="toolbar-meta">标签筛选</view>
+      <view class="tag-group">
+        <view class="tag-chip {{selectedTag === '' ? 'is-active' : ''}}" data-tag="" bindtap="selectTag">全部</view>
+        <view
+          class="tag-chip {{selectedTag === item ? 'is-active' : ''}}"
+          wx:for="{{tags}}"
+          wx:key="*this"
+          data-tag="{{item}}"
+          bindtap="selectTag"
+        >
+          {{item}}
+        </view>
+      </view>
+      <view class="toolbar-meta toolbar-meta-second">排序方式</view>
       <view class="sort-group">
         <view class="sort-chip {{sortKey === 'default' ? 'is-active' : ''}}" data-sort="default" bindtap="changeSort">最新</view>
         <view class="sort-chip {{sortKey === 'priceAsc' ? 'is-active' : ''}}" data-sort="priceAsc" bindtap="changeSort">价格低到高</view>
@@ -25,6 +38,7 @@
         wx:for="{{displayFruits}}"
         wx:key="_id"
         fruit="{{item}}"
+        show-shop-name="{{true}}"
         bind:tap="goDetail"
       />
     </view>

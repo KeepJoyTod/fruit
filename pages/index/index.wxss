@@ -257,6 +257,34 @@
   gap: 24rpx;
 }
 
+.tag-scroll {
+  width: 100%;
+  white-space: nowrap;
+  margin-top: 20rpx;
+  padding-bottom: 8rpx;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 116rpx;
+  height: 64rpx;
+  padding: 0 24rpx;
+  margin-right: 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.88);
+  color: #5f6f5f;
+  font-size: 24rpx;
+  box-shadow: 0 10rpx 24rpx rgba(36, 49, 38, 0.06);
+}
+
+.tag-chip.is-active {
+  background: linear-gradient(135deg, #ff8a3d 0%, #ffad55 100%);
+  color: #ffffff;
+  box-shadow: 0 16rpx 32rpx rgba(255, 138, 61, 0.24);
+}
+
 .section-chip {
   display: inline-flex;
   align-items: center;

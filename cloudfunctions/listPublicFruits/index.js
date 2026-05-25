@@ -27,10 +27,26 @@ function escapeRegExp(text) {
   return String(text || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function buildQueryCondition(keyword, categoryId) {
-  const condition = {
-    status: "on_sale"
-  };
+function normalizeImageList(list) {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+
+  return list.map((item) => String(item || "").trim()).filter(Boolean);
+}
+
+function pickFruitMainImage(fruit) {
+  const mainImage = String((fruit && fruit.mainImage) || "").trim();
+
+  if (mainImage) {
+    return mainImage;
+  }
+
+  return normalizeImageList(fruit && fruit.detailImages)[0] || "";
+}
+
+function buildQueryCondition(keyword, categoryId, tag) {
+  const condition = {};
 
   if (keyword) {
     condition.name = db.RegExp({
@@ -43,7 +59,38 @@ function buildQueryCondition(keyword, categoryId) {
     condition.categoryIds = categoryId;
   }
 
+  if (tag) {
+    condition.tags = tag;
+  }
+
   return condition;
+}
+
+function isFruitPublicVisible(fruit) {
+  return !fruit || !fruit.status || fruit.status === "on_sale";
+}
+
+async function queryFruits(condition, start, limit) {
+  const result = await fruits
+    .where(condition)
+    .field({
+      shopId: true,
+      name: true,
+      tags: true,
+      mainImage: true,
+      detailImages: true,
+      origin: true,
+      specs: true,
+      status: true,
+      categoryIds: true,
+      createTime: true
+    })
+    .orderBy("createTime", "desc")
+    .skip(start)
+    .limit(limit)
+    .get();
+
+  return result.data || [];
 }
 
 async function loadShopMap(shopIds) {
@@ -87,30 +134,26 @@ exports.main = async (event) => {
   const payload = event || {};
   const keyword = normalizeKeyword(payload.keyword);
   const categoryId = String(payload.categoryId || "").trim();
+  const tag = String(payload.tag || "").trim();
   const page = normalizePage(payload.page, 1, 1, 9999);
   const pageSize = normalizePage(payload.pageSize, 20, 1, 50);
 
   try {
     const start = (page - 1) * pageSize;
-    const condition = buildQueryCondition(keyword, categoryId);
-    const result = await fruits
-      .where(condition)
-      .field({
-        shopId: true,
-        name: true,
-        tags: true,
-        mainImage: true,
-        origin: true,
-        specs: true,
-        status: true,
-        categoryIds: true,
-        createTime: true
-      })
-      .orderBy("createTime", "desc")
-      .skip(start)
-      .limit(pageSize + 1)
-      .get();
-    const pageData = result.data || [];
+    const condition = buildQueryCondition(keyword, categoryId, tag);
+    let pageData = await queryFruits(
+      Object.assign({}, condition, {
+        status: "on_sale"
+      }),
+      start,
+      pageSize + 1
+    );
+
+    // 兼容历史商品：旧数据没有 status 字段，默认视为上架商品。
+    if (pageData.length === 0) {
+      pageData = (await queryFruits(condition, start, Math.min(pageSize * 3, 50))).filter(isFruitPublicVisible);
+    }
+
     const currentList = pageData.slice(0, pageSize);
     const hasMore = pageData.length > pageSize;
     const shopMap = await loadShopMap(currentList.map((fruit) => fruit.shopId));
@@ -126,7 +169,7 @@ exports.main = async (event) => {
         shopName: shopMap[fruit.shopId] && shopMap[fruit.shopId].name ? shopMap[fruit.shopId].name : "",
         name: fruit.name,
         tags: fruit.tags || [],
-        mainImage: fruit.mainImage || "",
+        mainImage: pickFruitMainImage(fruit),
         origin: fruit.origin || "",
         minPrice: getMinPrice(fruit.specs),
         status: fruit.status || "on_sale",

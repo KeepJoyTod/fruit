@@ -1,4 +1,4 @@
-const { getMinPrice, formatPrice } = require("../../utils/fruit");
+const { getMinPrice, formatPrice, buildFruitGallery, normalizeImageList, pickFruitMainImage } = require("../../utils/fruit");
 const app = getApp();
 
 function updateCategoryCache(categories) {
@@ -82,14 +82,16 @@ Page({
         stockNumber: Number(spec.stock || 0),
         priceText: formatPrice(spec.price)
       }));
+      const detailImages = normalizeImageList(data.fruit.detailImages);
       const fruit = {
         ...data.fruit,
+        mainImage: pickFruitMainImage(data.fruit),
         categoryIds: data.fruit.categoryIds || [],
         tags: data.fruit.tags || [],
-        detailImages: data.fruit.detailImages || [],
+        detailImages,
         specs
       };
-      const galleryImages = [fruit.mainImage].concat(fruit.detailImages || []).filter(Boolean);
+      const galleryImages = buildFruitGallery(fruit);
       const defaultSpecIndex = specs.findIndex((spec) => spec.stockNumber > 0);
       const selectedSpecIndex = defaultSpecIndex >= 0 ? defaultSpecIndex : 0;
 

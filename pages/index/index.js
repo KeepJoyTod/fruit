@@ -1,4 +1,5 @@
 const app = getApp();
+const { TAGS } = require("../../utils/constants");
 
 function updateCategoryCache(categories) {
   const list = Array.isArray(categories) ? categories : [];
@@ -22,6 +23,8 @@ Page({
     businessStatus: "open",
     loading: false,
     hasLoaded: false,
+    tags: TAGS,
+    selectedTag: "",
     categories: [],
     fruits: []
   },
@@ -113,6 +116,7 @@ Page({
       const result = await wx.cloud.callFunction({
         name: "listPublicFruits",
         data: {
+          tag: this.data.selectedTag,
           page: 1,
           pageSize: 20
         }
@@ -152,6 +156,19 @@ Page({
     wx.navigateTo({
       url: `/pages/category/index?id=${id}`
     });
+  },
+
+  selectTag(event) {
+    const { tag = "" } = event.currentTarget.dataset;
+
+    if (tag === this.data.selectedTag) {
+      return;
+    }
+
+    this.setData({
+      selectedTag: tag
+    });
+    this.loadFruits();
   },
 
   goDetail(event) {

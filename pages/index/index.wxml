@@ -43,8 +43,7 @@
   <view class="home-section">
     <view class="section-heading">
       <view>
-        <view class="section-heading-title">逛逛分类</view>
-        <view class="section-heading-copy">快速找到想吃的水果</view>
+ 
       </view>
     </view>
     <scroll-view class="category-scroll" scroll-x wx:if="{{categories.length > 0}}">
@@ -53,17 +52,29 @@
         <view class="category-pill-tip">立即查看</view>
       </view>
     </scroll-view>
-    <view class="muted placeholder category-placeholder" wx:else>暂无分类</view>
   </view>
 
   <view class="home-section">
     <view class="section-heading">
       <view>
         <view class="section-heading-title">今日推荐</view>
-        <view class="section-heading-copy">挑些刚刚上新的清甜水果</view>
+        <view class="section-heading-copy">刚刚上新的新鲜水果</view>
       </view>
       <view class="section-chip" wx:if="{{fruits.length > 0}}">{{fruits.length}} 款可选</view>
     </view>
+
+    <scroll-view class="tag-scroll" scroll-x>
+      <view class="tag-chip {{selectedTag === '' ? 'is-active' : ''}}" data-tag="" bindtap="selectTag">全部</view>
+      <view
+        class="tag-chip {{selectedTag === item ? 'is-active' : ''}}"
+        wx:for="{{tags}}"
+        wx:key="*this"
+        data-tag="{{item}}"
+        bindtap="selectTag"
+      >
+        {{item}}
+      </view>
+    </scroll-view>
 
     <block wx:if="{{!loading && fruits.length > 0}}">
       <view class="fruit-list">
@@ -71,6 +82,7 @@
           wx:for="{{fruits}}"
           wx:key="_id"
           fruit="{{item}}"
+          show-shop-name="{{true}}"
           bind:tap="goDetail"
         />
       </view>

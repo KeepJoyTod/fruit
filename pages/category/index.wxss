@@ -72,6 +72,33 @@
   font-weight: 600;
 }
 
+.toolbar-meta-second {
+  margin-top: 24rpx;
+}
+
+.tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.tag-chip {
+  min-width: 112rpx;
+  padding: 16rpx 24rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.88);
+  color: #5f6f5f;
+  font-size: 24rpx;
+  text-align: center;
+}
+
+.tag-chip.is-active {
+  background: linear-gradient(135deg, #ff8a3d 0%, #ffad55 100%);
+  color: #ffffff;
+  box-shadow: 0 16rpx 32rpx rgba(255, 138, 61, 0.2);
+}
+
 .sort-group {
   display: flex;
   flex-wrap: wrap;

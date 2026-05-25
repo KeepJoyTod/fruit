@@ -1,4 +1,5 @@
 const { getMinPrice } = require("../../utils/fruit");
+const { TAGS } = require("../../utils/constants");
 const app = getApp();
 
 function updateCategoryCache(categories) {
@@ -21,6 +22,8 @@ Page({
     categoryId: "",
     loading: false,
     loaded: false,
+    tags: TAGS,
+    selectedTag: "",
     category: null,
     fruits: [],
     displayFruits: [],
@@ -71,6 +74,7 @@ Page({
           name: "listPublicFruits",
           data: {
             categoryId: this.data.categoryId,
+            tag: this.data.selectedTag,
             page: 1,
             pageSize: 50
           }
@@ -162,6 +166,19 @@ Page({
     }
 
     this.applySort(sort);
+  },
+
+  selectTag(event) {
+    const { tag = "" } = event.currentTarget.dataset;
+
+    if (tag === this.data.selectedTag) {
+      return;
+    }
+
+    this.setData({
+      selectedTag: tag
+    });
+    this.loadData();
   },
 
   goSearch() {

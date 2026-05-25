@@ -74,6 +74,22 @@
   font-size: 24rpx;
 }
 
+.fruit-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 14rpx;
+}
+
+.fruit-tag {
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 138, 61, 0.12);
+  color: #d46b1f;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
 .fruit-foot {
   display: flex;
   align-items: center;

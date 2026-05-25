@@ -6,6 +6,7 @@ cloud.init({
 
 const db = cloud.database();
 const fruits = db.collection("fruits");
+const shops = db.collection("shops");
 
 exports.main = async (event) => {
   const fruitId = String((event && event.fruitId) || "").trim();
@@ -36,11 +37,20 @@ exports.main = async (event) => {
       };
     }
 
+    let shopName = "";
+
+    if (fruit.shopId) {
+      const shopResult = await shops.doc(fruit.shopId).get();
+      const shop = shopResult.data;
+      shopName = shop && shop.name ? shop.name : "";
+    }
+
     return {
       success: true,
       fruit: {
         _id: fruit._id,
         shopId: fruit.shopId,
+        shopName,
         name: fruit.name,
         categoryIds: fruit.categoryIds || [],
         tags: fruit.tags || [],
