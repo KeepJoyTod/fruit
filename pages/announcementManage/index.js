@@ -1,17 +1,12 @@
-const app = getApp();
-
-function redirectToMerchantHome() {
-  wx.redirectTo({
-    url: "/pages/merchant/index",
-    fail: () => {
-      wx.reLaunch({
-        url: "/pages/merchant/index"
-      });
-    }
-  });
-}
+const announcementService = require("../../services/announcementService");
+const store = require("../../utils/store");
+const authRequired = require("../../behaviors/authRequired");
+const navigation = require("../../utils/navigation");
+const ui = require("../../utils/ui");
 
 Page({
+  behaviors: [authRequired],
+
   data: {
     saving: false,
     announcement: "",
@@ -19,7 +14,11 @@ Page({
   },
 
   onShow() {
-    const shop = app.globalData.shop || {};
+    if (!this.requireShopLogin()) {
+      return;
+    }
+
+    const shop = store.getShop() || {};
     this.setData({
       announcement: shop.announcement || "",
       updatedText: shop.announcementUpdateTime ? "已发布" : "尚未发布"
@@ -33,7 +32,7 @@ Page({
   },
 
   validateForm() {
-    if (!app.globalData.shop || !app.globalData.shop._id) {
+    if (!store.getShopId()) {
       return "请先完成商家登录";
     }
 
@@ -55,53 +54,31 @@ Page({
 
     const errorMessage = this.validateForm();
     if (errorMessage) {
-      wx.showToast({
-        title: errorMessage,
-        icon: "none"
-      });
+      ui.showToast(errorMessage);
       return;
     }
 
     this.setData({ saving: true });
-    wx.showLoading({
-      title: "发布中"
-    });
+    ui.showLoading("发布中");
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "publishAnnouncement",
-        data: {
-          shopId: app.globalData.shop._id,
-          announcement: this.data.announcement
-        }
-      });
-      const data = result.result;
+      const data = await announcementService.publishAnnouncement(store.getShopId(), this.data.announcement);
 
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "公告发布失败");
-      }
-
-      app.globalData.shop = data.shop;
-      app.globalData.shouldRefreshHomeFruits = true;
+      store.setShop(data.shop);
+      store.markHomeFruitsChanged();
 
       this.setData({
         announcement: data.shop.announcement || "",
         updatedText: "刚刚发布"
       });
 
-      wx.showToast({
-        title: "已发布",
-        icon: "success"
-      });
-      redirectToMerchantHome();
+      ui.showSuccess("已发布");
+      navigation.redirectToMerchantHome();
     } catch (error) {
       console.error("publish announcement failed", error);
-      wx.showToast({
-        title: error.message || "公告发布失败",
-        icon: "none"
-      });
+      ui.showError(error, "公告发布失败");
     } finally {
-      wx.hideLoading();
+      ui.hideLoading();
       this.setData({ saving: false });
     }
   },

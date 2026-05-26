@@ -1,18 +1,11 @@
-const { getMinPrice, formatPrice, buildFruitGallery, normalizeImageList, pickFruitMainImage } = require("../../utils/fruit");
-const app = getApp();
-
-function updateCategoryCache(categories) {
-  const list = Array.isArray(categories) ? categories : [];
-  app.globalData.categories = list;
-  app.globalData.categoryMap = list.reduce((map, item) => {
-    if (item && item._id) {
-      map[item._id] = item;
-    }
-    return map;
-  }, {});
-}
+const fruitService = require("../../services/fruitService");
+const { normalizeFruitDetail } = require("../../models/fruitMapper");
+const { loadPublicCategories } = require("../../utils/category");
+const navigation = require("../../utils/navigation");
+const ui = require("../../utils/ui");
 
 function getCachedRelatedCategories(categoryIds) {
+  const app = getApp();
   const categoryMap = app.globalData.categoryMap || {};
   return (categoryIds || []).map((id) => categoryMap[id]).filter(Boolean);
 }
@@ -54,69 +47,33 @@ Page({
 
   async loadFruit() {
     if (!this.data.fruitId) {
-      wx.showToast({
-        title: "缺少商品信息",
-        icon: "none"
-      });
+      ui.showToast("缺少商品信息");
       return;
     }
 
     this.setData({ loading: true });
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "getFruitDetail",
-        data: {
-          fruitId: this.data.fruitId
-        }
+      const data = await fruitService.getFruitDetail({
+        fruitId: this.data.fruitId
       });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "商品加载失败");
-      }
-
-      const specs = (data.fruit.specs || []).map((spec) => ({
-        ...spec,
-        weightText: spec.weight || "未填写重量",
-        stockNumber: Number(spec.stock || 0),
-        priceText: formatPrice(spec.price)
-      }));
-      const detailImages = normalizeImageList(data.fruit.detailImages);
-      const fruit = {
-        ...data.fruit,
-        mainImage: pickFruitMainImage(data.fruit),
-        categoryIds: data.fruit.categoryIds || [],
-        tags: data.fruit.tags || [],
-        detailImages,
-        specs
-      };
-      const galleryImages = buildFruitGallery(fruit);
-      const defaultSpecIndex = specs.findIndex((spec) => spec.stockNumber > 0);
-      const selectedSpecIndex = defaultSpecIndex >= 0 ? defaultSpecIndex : 0;
+      const detailState = normalizeFruitDetail(data.fruit);
 
       this.setData({
-        fruit,
-        minPrice: formatPrice(getMinPrice(specs)),
-        galleryImages,
-        currentImage: galleryImages[0] || "",
+        fruit: detailState.fruit,
+        minPrice: detailState.minPrice,
+        galleryImages: detailState.galleryImages,
+        currentImage: detailState.currentImage,
         currentImageIndex: 0,
-        selectedSpecIndex,
-        selectedSpec: specs[selectedSpecIndex] || null,
-        detailImageItems: fruit.detailImages.map((url, index) => ({
-          url,
-          galleryIndex: galleryImages.indexOf(url),
-          key: `${url}_${index}`
-        }))
+        selectedSpecIndex: detailState.selectedSpecIndex,
+        selectedSpec: detailState.selectedSpec,
+        detailImageItems: detailState.detailImageItems
       });
 
-      await this.loadRelatedCategories(fruit.categoryIds);
+      await this.loadRelatedCategories(detailState.fruit.categoryIds);
     } catch (error) {
       console.error("load fruit detail failed", error);
-      wx.showToast({
-        title: error.message || "商品加载失败",
-        icon: "none"
-      });
+      ui.showError(error, "商品加载失败");
       this.setData({
         fruit: null,
         galleryImages: [],
@@ -149,16 +106,7 @@ Page({
     }
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "listPublicCategories"
-      });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "分类加载失败");
-      }
-
-      updateCategoryCache(data.categories || []);
+      await loadPublicCategories();
 
       this.setData({
         relatedCategories: getCachedRelatedCategories(categoryIds)
@@ -221,25 +169,18 @@ Page({
       return;
     }
 
-    wx.navigateTo({
-      url: `/pages/category/index?id=${id}`
-    });
+    navigation.navigateToCategory(id);
   },
 
   goPrimaryCategory() {
     const firstCategory = this.data.relatedCategories[0];
 
     if (!firstCategory) {
-      wx.showToast({
-        title: "暂无关联分类",
-        icon: "none"
-      });
+      ui.showToast("暂无关联分类");
       return;
     }
 
-    wx.navigateTo({
-      url: `/pages/category/index?id=${firstCategory._id}`
-    });
+    navigation.navigateToCategory(firstCategory._id);
   },
 
   copyName() {
@@ -259,15 +200,12 @@ Page({
     const spec = this.data.selectedSpec;
 
     if (!fruit || !spec) {
-      wx.showToast({
-        title: "暂无规格信息",
-        icon: "none"
-      });
+      ui.showToast("暂无规格信息");
       return;
     }
 
     wx.setClipboardData({
-      data: `${fruit.name} ${spec.name} ${spec.weightText} ￥${spec.priceText} 库存${spec.stockNumber}`
+      data: `${fruit.name} ${spec.name} ${spec.weightText} ¥${spec.priceText} 库存${spec.stockNumber}`
     });
   },
 
@@ -275,7 +213,7 @@ Page({
     const fruit = this.data.fruit;
 
     return {
-      title: fruit && fruit.name ? `${fruit.name} ￥${this.data.minPrice} 起` : "水果详情",
+      title: fruit && fruit.name ? `${fruit.name} ¥${this.data.minPrice} 起` : "水果详情",
       path: `/pages/detail/index?id=${this.data.fruitId}`,
       imageUrl: fruit && fruit.mainImage ? fruit.mainImage : ""
     };
@@ -285,7 +223,7 @@ Page({
     const fruit = this.data.fruit;
 
     return {
-      title: fruit && fruit.name ? `${fruit.name} ￥${this.data.minPrice} 起` : "水果详情",
+      title: fruit && fruit.name ? `${fruit.name} ¥${this.data.minPrice} 起` : "水果详情",
       query: `id=${this.data.fruitId}`,
       imageUrl: fruit && fruit.mainImage ? fruit.mainImage : ""
     };

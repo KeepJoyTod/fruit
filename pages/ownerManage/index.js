@@ -1,6 +1,12 @@
-const app = getApp();
+const ownerService = require("../../services/ownerService");
+const store = require("../../utils/store");
+const authRequired = require("../../behaviors/authRequired");
+const navigation = require("../../utils/navigation");
+const ui = require("../../utils/ui");
 
 Page({
+  behaviors: [authRequired],
+
   data: {
     loading: false,
     creating: false,
@@ -14,17 +20,6 @@ Page({
     this.loadOwners();
   },
 
-  redirectToMerchantHome() {
-    wx.redirectTo({
-      url: "/pages/merchant/index",
-      fail: () => {
-        wx.reLaunch({
-          url: "/pages/merchant/index"
-        });
-      }
-    });
-  },
-
   showNotCreatorModal() {
     wx.showModal({
       title: "没有权限",
@@ -32,39 +27,20 @@ Page({
       showCancel: false,
       confirmText: "知道了",
       success: () => {
-        this.redirectToMerchantHome();
+        navigation.redirectToMerchantHome();
       }
     });
   },
 
   async loadOwners() {
-    const shop = app.globalData.shop;
-
-    if (!shop || !shop._id) {
-      wx.showToast({
-        title: "请先登录",
-        icon: "none"
-      });
-      wx.redirectTo({
-        url: "/pages/login/index"
-      });
+    if (!this.requireShopLogin()) {
       return;
     }
 
     this.setData({ loading: true });
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "listOwners",
-        data: {
-          shopId: shop._id
-        }
-      });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "Owner 加载失败");
-      }
+      const data = await ownerService.listOwners(store.getShopId());
 
       if (!data.isCreator) {
         this.setData({
@@ -91,10 +67,7 @@ Page({
         return;
       }
 
-      wx.showToast({
-        title: error.message || "Owner 加载失败",
-        icon: "none"
-      });
+      ui.showError(error, "Owner 加载失败");
     } finally {
       this.setData({ loading: false });
     }
@@ -111,50 +84,29 @@ Page({
     }
 
     this.setData({ creating: true });
-    wx.showLoading({
-      title: "生成中"
-    });
+    ui.showLoading("生成中");
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "createInvite",
-        data: {
-          shopId: app.globalData.shop._id
-        }
-      });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "邀请生成失败");
-      }
+      const data = await ownerService.createInvite(store.getShopId());
 
       this.setData({
         inviteCode: data.code || "",
         invitePath: data.path || ""
       });
 
-      wx.showToast({
-        title: "已生成邀请",
-        icon: "success"
-      });
+      ui.showSuccess("已生成邀请");
     } catch (error) {
       console.error("create invite failed", error);
-      wx.showToast({
-        title: error.message || "邀请生成失败",
-        icon: "none"
-      });
+      ui.showError(error, "邀请生成失败");
     } finally {
-      wx.hideLoading();
+      ui.hideLoading();
       this.setData({ creating: false });
     }
   },
 
   copyInvite() {
     if (!this.data.invitePath) {
-      wx.showToast({
-        title: "请先生成邀请链接",
-        icon: "none"
-      });
+      ui.showToast("请先生成邀请链接");
       return;
     }
 
@@ -164,7 +116,7 @@ Page({
   },
 
   onShareAppMessage() {
-    const shop = app.globalData.shop || {};
+    const shop = store.getShop() || {};
     const path = this.data.invitePath || "/pages/login/index";
 
     return {
@@ -183,16 +135,13 @@ Page({
     const { openid, name, removable } = event.currentTarget.dataset;
 
     if (!removable) {
-      wx.showToast({
-        title: "店主不能被移除",
-        icon: "none"
-      });
+      ui.showToast("店主不能被移除");
       return;
     }
 
     wx.showModal({
       title: "移除 Owner",
-      content: `确认移除“${name}”吗？`,
+      content: `确认移除"${name}"吗？`,
       confirmText: "移除",
       confirmColor: "#b91c1c",
       success: (result) => {
@@ -204,37 +153,18 @@ Page({
   },
 
   async removeOwner(ownerOpenid) {
-    wx.showLoading({
-      title: "移除中"
-    });
+    ui.showLoading("移除中");
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "removeOwner",
-        data: {
-          shopId: app.globalData.shop._id,
-          ownerOpenid
-        }
-      });
-      const data = result.result;
+      await ownerService.removeOwner(store.getShopId(), ownerOpenid);
 
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "移除失败");
-      }
-
-      wx.showToast({
-        title: "已移除",
-        icon: "success"
-      });
+      ui.showSuccess("已移除");
       this.loadOwners();
     } catch (error) {
       console.error("remove owner failed", error);
-      wx.showToast({
-        title: error.message || "移除失败",
-        icon: "none"
-      });
+      ui.showError(error, "移除失败");
     } finally {
-      wx.hideLoading();
+      ui.hideLoading();
     }
   }
 });

@@ -1,44 +1,27 @@
-const app = getApp();
 const { TAGS } = require("../../utils/constants");
-const { normalizeImageList, pickFruitMainImage } = require("../../utils/fruit");
+const fruitService = require("../../services/fruitService");
+const { loadMerchantCategories } = require("../../utils/category");
+const { chooseImages, uploadImage, uploadImages, isChooseCancel } = require("../../utils/upload");
+const store = require("../../utils/store");
+const authRequired = require("../../behaviors/authRequired");
+const navigation = require("../../utils/navigation");
+const ui = require("../../utils/ui");
+const {
+  MAX_DETAIL_IMAGES,
+  createEmptySpec,
+  createEmptyFruitForm,
+  buildEditFruitState,
+  toggleSelectedMap,
+  validateFruitForm
+} = require("../../forms/fruitForm");
 
-const MAX_DETAIL_IMAGES = 9;
-
-function createEmptySpec() {
-  return {
-    name: "",
-    weight: "",
-    price: "",
-    stock: ""
-  };
-}
-
-function mapSelectedTags(tags) {
-  return (tags || []).reduce((map, tag) => {
-    map[tag] = true;
-    return map;
-  }, {});
-}
-
-function mapSelectedCategories(categoryIds) {
-  return (categoryIds || []).reduce((map, categoryId) => {
-    map[categoryId] = true;
-    return map;
-  }, {});
-}
-
-function redirectToMerchantHome() {
-  wx.redirectTo({
-    url: "/pages/merchant/index",
-    fail: () => {
-      wx.reLaunch({
-        url: "/pages/merchant/index"
-      });
-    }
-  });
+function getUploadShopId() {
+  return store.getShopId() || "unknown";
 }
 
 Page({
+  behaviors: [authRequired],
+
   data: {
     tags: TAGS,
     categories: [],
@@ -50,17 +33,7 @@ Page({
     displayImage: "",
     detailImages: [],
     detailImageTemps: [],
-    form: {
-      name: "",
-      mainImage: "",
-      mainImageTemp: "",
-      origin: "",
-      description: "",
-      tags: [],
-      categoryIds: [],
-      status: "on_sale",
-      specs: [createEmptySpec()]
-    }
+    form: createEmptyFruitForm()
   },
 
   onLoad(options) {
@@ -76,28 +49,15 @@ Page({
   },
 
   async loadCategories() {
-    const shop = app.globalData.shop;
+    const shopId = this.getRequiredShopId();
 
-    if (!shop || !shop._id) {
+    if (!shopId) {
       return;
     }
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "listMerchantCategories",
-        data: {
-          shopId: shop._id
-        }
-      });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "分类加载失败");
-      }
-
-      this.setData({
-        categories: data.categories || []
-      });
+      const categories = await loadMerchantCategories(shopId);
+      this.setData({ categories });
     } catch (error) {
       console.error("load edit categories failed", error);
     }
@@ -105,57 +65,29 @@ Page({
 
   async loadFruit() {
     if (!this.data.fruitId) {
-      wx.showToast({
-        title: "缺少商品信息",
-        icon: "none"
-      });
+      ui.showToast("缺少商品信息");
       return;
     }
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "getFruitDetail",
-        data: {
-          fruitId: this.data.fruitId,
-          includeOffSale: true
-        }
+      const data = await fruitService.getFruitDetail({
+        fruitId: this.data.fruitId,
+        includeOffSale: true
       });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "商品加载失败");
-      }
-
-      const fruit = data.fruit;
-      const specs = Array.isArray(fruit.specs) && fruit.specs.length > 0 ? fruit.specs : [createEmptySpec()];
-      const mainImage = pickFruitMainImage(fruit);
-      const detailImages = normalizeImageList(fruit.detailImages);
+      const fruitState = buildEditFruitState(data.fruit);
 
       this.setData({
         formReady: true,
-        displayImage: mainImage,
-        detailImages,
-        detailImageTemps: [],
-        selectedTagMap: mapSelectedTags(fruit.tags),
-        selectedCategoryMap: mapSelectedCategories(fruit.categoryIds),
-        form: {
-          name: fruit.name || "",
-          mainImage,
-          mainImageTemp: "",
-          origin: fruit.origin || "",
-          description: fruit.description || "",
-          tags: fruit.tags || [],
-          categoryIds: fruit.categoryIds || [],
-          status: fruit.status || "on_sale",
-          specs
-        }
+        displayImage: fruitState.displayImage,
+        detailImages: fruitState.detailImages,
+        detailImageTemps: fruitState.detailImageTemps,
+        selectedTagMap: fruitState.selectedTagMap,
+        selectedCategoryMap: fruitState.selectedCategoryMap,
+        form: fruitState.form
       });
     } catch (error) {
       console.error("load edit fruit failed", error);
-      wx.showToast({
-        title: error.message || "商品加载失败",
-        icon: "none"
-      });
+      ui.showError(error, "商品加载失败");
     }
   },
 
@@ -179,32 +111,24 @@ Page({
 
   async chooseMainImage() {
     try {
-      const result = await wx.chooseMedia({
-        count: 1,
-        mediaType: ["image"],
-        sourceType: ["album", "camera"],
-        sizeType: ["compressed"]
-      });
-      const file = result.tempFiles && result.tempFiles[0];
+      const paths = await chooseImages({ count: 1 });
+      const filePath = paths[0];
 
-      if (!file || !file.tempFilePath) {
+      if (!filePath) {
         return;
       }
 
       this.setData({
-        displayImage: file.tempFilePath,
-        "form.mainImageTemp": file.tempFilePath
+        displayImage: filePath,
+        "form.mainImageTemp": filePath
       });
     } catch (error) {
-      if (error && error.errMsg && error.errMsg.includes("cancel")) {
+      if (isChooseCancel(error)) {
         return;
       }
 
       console.error("choose image failed", error);
-      wx.showToast({
-        title: "选择图片失败",
-        icon: "none"
-      });
+      ui.showToast("选择图片失败");
     }
   },
 
@@ -212,21 +136,12 @@ Page({
     const remainCount = MAX_DETAIL_IMAGES - this.data.detailImages.length - this.data.detailImageTemps.length;
 
     if (remainCount <= 0) {
-      wx.showToast({
-        title: "最多上传9张详情图",
-        icon: "none"
-      });
+      ui.showToast("最多上传9张详情图");
       return;
     }
 
     try {
-      const result = await wx.chooseMedia({
-        count: remainCount,
-        mediaType: ["image"],
-        sourceType: ["album", "camera"],
-        sizeType: ["compressed"]
-      });
-      const paths = (result.tempFiles || []).map((file) => file.tempFilePath).filter(Boolean);
+      const paths = await chooseImages({ count: remainCount });
 
       if (paths.length === 0) {
         return;
@@ -238,15 +153,12 @@ Page({
           .slice(0, MAX_DETAIL_IMAGES - this.data.detailImages.length)
       });
     } catch (error) {
-      if (error && error.errMsg && error.errMsg.includes("cancel")) {
+      if (isChooseCancel(error)) {
         return;
       }
 
       console.error("choose detail images failed", error);
-      wx.showToast({
-        title: "选择详情图失败",
-        icon: "none"
-      });
+      ui.showToast("选择详情图失败");
     }
   },
 
@@ -264,17 +176,12 @@ Page({
     this.setData({ detailImageTemps });
   },
 
-  async uploadImage(filePath, folder) {
-    const extMatch = filePath.match(/\.[^.]+$/);
-    const ext = extMatch ? extMatch[0] : ".jpg";
-    const shopId = app.globalData.shop && app.globalData.shop._id ? app.globalData.shop._id : "unknown";
-    const cloudPath = `fruits/${shopId}/${folder}/${Date.now()}-${Math.random().toString(16).slice(2)}${ext}`;
-    const result = await wx.cloud.uploadFile({
-      cloudPath,
-      filePath
+  uploadFruitImage(filePath, folder) {
+    return uploadImage(filePath, {
+      root: "fruits",
+      ownerId: getUploadShopId(),
+      folder
     });
-
-    return result.fileID;
   },
 
   async uploadMainImage() {
@@ -282,15 +189,15 @@ Page({
       return this.data.form.mainImage;
     }
 
-    return this.uploadImage(this.data.form.mainImageTemp, "main");
+    return this.uploadFruitImage(this.data.form.mainImageTemp, "main");
   },
 
   async uploadDetailImages() {
-    const uploaded = [];
-
-    for (const path of this.data.detailImageTemps) {
-      uploaded.push(await this.uploadImage(path, "detail"));
-    }
+    const uploaded = await uploadImages(this.data.detailImageTemps, {
+      root: "fruits",
+      ownerId: getUploadShopId(),
+      folder: "detail"
+    });
 
     return this.data.detailImages.concat(uploaded).slice(0, MAX_DETAIL_IMAGES);
   },
@@ -313,13 +220,7 @@ Page({
 
   toggleTag(event) {
     const tag = event.currentTarget.dataset.tag;
-    const selectedTagMap = Object.assign({}, this.data.selectedTagMap);
-
-    if (selectedTagMap[tag]) {
-      delete selectedTagMap[tag];
-    } else {
-      selectedTagMap[tag] = true;
-    }
+    const selectedTagMap = toggleSelectedMap(this.data.selectedTagMap, tag);
 
     this.setData({
       selectedTagMap,
@@ -329,13 +230,7 @@ Page({
 
   toggleCategory(event) {
     const categoryId = event.currentTarget.dataset.id;
-    const selectedCategoryMap = Object.assign({}, this.data.selectedCategoryMap);
-
-    if (selectedCategoryMap[categoryId]) {
-      delete selectedCategoryMap[categoryId];
-    } else {
-      selectedCategoryMap[categoryId] = true;
-    }
+    const selectedCategoryMap = toggleSelectedMap(this.data.selectedCategoryMap, categoryId);
 
     this.setData({
       selectedCategoryMap,
@@ -344,20 +239,10 @@ Page({
   },
 
   validateForm() {
-    if (!this.data.form.name.trim()) {
-      return "请填写商品名称";
-    }
-
-    if (!this.data.displayImage) {
-      return "请选择商品主图";
-    }
-
-    const validSpecs = this.data.form.specs.filter((spec) => spec.name && Number(spec.price) > 0);
-    if (validSpecs.length === 0) {
-      return "请至少填写一个有效规格";
-    }
-
-    return "";
+    return validateFruitForm({
+      form: this.data.form,
+      hasMainImage: Boolean(this.data.displayImage)
+    });
   },
 
   async submit() {
@@ -367,57 +252,37 @@ Page({
 
     const errorMessage = this.validateForm();
     if (errorMessage) {
-      wx.showToast({
-        title: errorMessage,
-        icon: "none"
-      });
+      ui.showToast(errorMessage);
       return;
     }
 
     this.setData({ saving: true });
-    wx.showLoading({
-      title: "保存中"
-    });
+    ui.showLoading("保存中");
 
     try {
       const mainImage = await this.uploadMainImage();
       const detailImages = await this.uploadDetailImages();
-      const result = await wx.cloud.callFunction({
-        name: "updateFruit",
-        data: {
-          fruitId: this.data.fruitId,
-          name: this.data.form.name,
-          mainImage,
-          detailImages,
-          origin: this.data.form.origin,
-          description: this.data.form.description,
-          categoryIds: this.data.form.categoryIds,
-          tags: this.data.form.tags,
-          status: this.data.form.status,
-          specs: this.data.form.specs
-        }
-      });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "保存失败");
-      }
-
-      wx.showToast({
-        title: "已保存",
-        icon: "success"
+      await fruitService.updateFruit({
+        fruitId: this.data.fruitId,
+        name: this.data.form.name,
+        mainImage,
+        detailImages,
+        origin: this.data.form.origin,
+        description: this.data.form.description,
+        categoryIds: this.data.form.categoryIds,
+        tags: this.data.form.tags,
+        status: this.data.form.status,
+        specs: this.data.form.specs
       });
 
-      app.globalData.shouldRefreshHomeFruits = true;
-      redirectToMerchantHome();
+      ui.showSuccess("已保存");
+      store.markHomeFruitsChanged();
+      navigation.redirectToMerchantHome();
     } catch (error) {
       console.error("update fruit failed", error);
-      wx.showToast({
-        title: error.message || "保存失败",
-        icon: "none"
-      });
+      ui.showError(error, "保存失败");
     } finally {
-      wx.hideLoading();
+      ui.hideLoading();
       this.setData({ saving: false });
     }
   }

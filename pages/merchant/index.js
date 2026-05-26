@@ -1,5 +1,9 @@
-const app = getApp();
-const { getMinPrice, formatPrice, pickFruitMainImage } = require("../../utils/fruit");
+const fruitService = require("../../services/fruitService");
+const { normalizeMerchantFruit, buildMerchantFruitStats } = require("../../models/fruitMapper");
+const store = require("../../utils/store");
+const authRequired = require("../../behaviors/authRequired");
+const navigation = require("../../utils/navigation");
+const ui = require("../../utils/ui");
 
 const BASE_MANAGEMENT_ITEMS = [
   { key: "category", label: "分类管理", icon: "#", tone: "green" },
@@ -10,10 +14,12 @@ const BASE_MANAGEMENT_ITEMS = [
 const CREATOR_MANAGEMENT_ITEM = { key: "owner", label: "团队管理", icon: "人", tone: "orange" };
 
 Page({
+  behaviors: [authRequired],
+
   data: {
-    shopName: app.globalData.shopName,
+    shopName: store.getShopName(),
     shopInitial: "店",
-    shopLogo: app.globalData.shopLogo,
+    shopLogo: store.getShopLogo(),
     businessStatus: "open",
     announcement: "",
     role: "",
@@ -31,26 +37,20 @@ Page({
   },
 
   onShow() {
-    const { user, shop, shopName, shopLogo } = app.globalData;
-
-    if (!shop || !shop._id) {
-      wx.showToast({
-        title: "请先登录",
-        icon: "none"
-      });
-      wx.redirectTo({
-        url: "/pages/login/index"
-      });
+    if (!this.requireShopLogin()) {
       return;
     }
 
+    const user = store.getUser();
+    const shop = store.getShop();
     const role = user && user.role ? user.role : "";
     const isCreator = role === "creator" || shop.creatorId === (user && user.openid);
+    const shopName = shop.name || store.getShopName();
 
     this.setData({
-      shopName: shop.name || shopName,
-      shopInitial: (shop.name || shopName || "店").slice(0, 1),
-      shopLogo: shop.logo || shopLogo,
+      shopName,
+      shopInitial: (shopName || "店").slice(0, 1),
+      shopLogo: shop.logo || store.getShopLogo(),
       businessStatus: shop.businessStatus || "open",
       announcement: shop.announcement || "",
       role,
@@ -62,83 +62,26 @@ Page({
   },
 
   async loadFruits() {
-    const shop = app.globalData.shop;
+    const shopId = store.getShopId();
 
-    if (!shop || !shop._id) {
+    if (!shopId) {
       this.setData({ fruits: [], filteredFruits: [] });
       return;
     }
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "listMerchantFruits",
-        data: {
-          shopId: shop._id
-        }
-      });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "商品加载失败");
-      }
-
-      const fruits = (data.fruits || []).map((fruit) => this.normalizeFruit(fruit));
+      const data = await fruitService.listMerchantFruits(shopId);
+      const fruits = (data.fruits || []).map((fruit) => normalizeMerchantFruit(fruit));
 
       this.setData({
         fruits,
-        stats: this.buildStats(fruits)
+        stats: buildMerchantFruitStats(fruits)
       });
       this.applyFilter();
     } catch (error) {
       console.error("load fruits failed", error);
-      wx.showToast({
-        title: error.message || "商品加载失败",
-        icon: "none"
-      });
+      ui.showError(error, "商品加载失败");
     }
-  },
-
-  normalizeFruit(fruit) {
-    const specs = Array.isArray(fruit.specs) ? fruit.specs : [];
-    const totalStock = specs.reduce((sum, spec) => sum + Number(spec && spec.stock ? spec.stock : 0), 0);
-    const status = fruit.status || "on_sale";
-
-    return {
-      ...fruit,
-      mainImage: pickFruitMainImage(fruit),
-      status,
-      statusText: status === "off_sale" ? "已下架" : "上架中",
-      statusClass: status === "off_sale" ? "off" : "on",
-      nextStatus: status === "off_sale" ? "on_sale" : "off_sale",
-      statusActionText: status === "off_sale" ? "上架" : "下架",
-      specCount: specs.length,
-      totalStock,
-      isLowStock: totalStock > 0 && totalStock <= 5,
-      minPrice: formatPrice(getMinPrice(specs))
-    };
-  },
-
-  buildStats(fruits) {
-    return fruits.reduce(
-      (stats, fruit) => {
-        stats.total += 1;
-        if (fruit.status === "off_sale") {
-          stats.offSale += 1;
-        } else {
-          stats.onSale += 1;
-        }
-        if (fruit.isLowStock) {
-          stats.lowStock += 1;
-        }
-        return stats;
-      },
-      {
-        total: 0,
-        onSale: 0,
-        offSale: 0,
-        lowStock: 0
-      }
-    );
   },
 
   applyFilter() {
@@ -169,29 +112,25 @@ Page({
     const key = event.currentTarget.dataset.key;
 
     if (key === "publish") {
-      this.goPublish();
+      navigation.navigateToPublish();
     } else if (key === "category") {
-      this.goCategoryManage();
+      navigation.navigateToCategoryManage();
     } else if (key === "shop") {
-      this.goShopSettings();
+      navigation.navigateToShopSettings();
     } else if (key === "announcement") {
-      this.goAnnouncementManage();
+      navigation.navigateToAnnouncementManage();
     } else if (key === "owner") {
-      this.goOwnerManage();
+      navigation.navigateToOwnerManage();
     }
   },
 
   goPublish() {
-    wx.navigateTo({
-      url: "/pages/publish/index"
-    });
+    navigation.navigateToPublish();
   },
 
   goEdit(event) {
     const { id } = event.currentTarget.dataset;
-    wx.navigateTo({
-      url: `/pages/edit/index?id=${id}`
-    });
+    navigation.navigateToEditFruit(id);
   },
 
   async toggleStatus(event) {
@@ -201,38 +140,19 @@ Page({
       return;
     }
 
-    wx.showLoading({
-      title: "更新中"
-    });
+    ui.showLoading("更新中");
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "updateFruitStatus",
-        data: {
-          fruitId: id,
-          status
-        }
-      });
-      const data = result.result;
+      await fruitService.updateFruitStatus(id, status);
 
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "状态更新失败");
-      }
-
-      app.globalData.shouldRefreshHomeFruits = true;
+      store.markHomeFruitsChanged();
       await this.loadFruits();
-      wx.showToast({
-        title: status === "off_sale" ? "已下架" : "已上架",
-        icon: "success"
-      });
+      ui.showSuccess(status === "off_sale" ? "已下架" : "已上架");
     } catch (error) {
       console.error("update fruit status failed", error);
-      wx.showToast({
-        title: error.message || "状态更新失败",
-        icon: "none"
-      });
+      ui.showError(error, "状态更新失败");
     } finally {
-      wx.hideLoading();
+      ui.hideLoading();
     }
   },
 
@@ -241,7 +161,7 @@ Page({
 
     wx.showModal({
       title: "删除商品",
-      content: `确认删除“${name}”吗？`,
+      content: `确认删除"${name}"吗？`,
       confirmText: "删除",
       confirmColor: "#b91c1c",
       success: (result) => {
@@ -253,62 +173,35 @@ Page({
   },
 
   async deleteFruit(fruitId) {
-    wx.showLoading({
-      title: "删除中"
-    });
+    ui.showLoading("删除中");
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "deleteFruit",
-        data: {
-          fruitId
-        }
-      });
-      const data = result.result;
+      await fruitService.deleteFruit(fruitId);
 
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "删除失败");
-      }
-
-      wx.showToast({
-        title: "已删除",
-        icon: "success"
-      });
-
-      app.globalData.shouldRefreshHomeFruits = true;
+      ui.showSuccess("已删除");
+      store.markHomeFruitsChanged();
       this.loadFruits();
     } catch (error) {
       console.error("delete fruit failed", error);
-      wx.showToast({
-        title: error.message || "删除失败",
-        icon: "none"
-      });
+      ui.showError(error, "删除失败");
     } finally {
-      wx.hideLoading();
+      ui.hideLoading();
     }
   },
 
   goCategoryManage() {
-    wx.navigateTo({
-      url: "/pages/categoryManage/index"
-    });
+    navigation.navigateToCategoryManage();
   },
 
   goShopSettings() {
-    wx.navigateTo({
-      url: "/pages/shopSettings/index"
-    });
+    navigation.navigateToShopSettings();
   },
 
   goAnnouncementManage() {
-    wx.navigateTo({
-      url: "/pages/announcementManage/index"
-    });
+    navigation.navigateToAnnouncementManage();
   },
 
   goOwnerManage() {
-    wx.navigateTo({
-      url: "/pages/ownerManage/index"
-    });
+    navigation.navigateToOwnerManage();
   }
 });
