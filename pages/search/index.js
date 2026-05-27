@@ -1,3 +1,7 @@
+const fruitService = require("../../services/fruitService");
+const navigation = require("../../utils/navigation");
+const ui = require("../../utils/ui");
+
 Page({
   data: {
     keyword: "",
@@ -61,19 +65,11 @@ Page({
     });
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "listPublicFruits",
-        data: {
-          keyword: normalizedKeyword,
-          page: 1,
-          pageSize: 20
-        }
+      const data = await fruitService.listPublicFruits({
+        keyword: normalizedKeyword,
+        page: 1,
+        pageSize: 20
       });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "搜索失败");
-      }
 
       if (requestId !== this.searchRequestId) {
         return;
@@ -88,10 +84,7 @@ Page({
       }
 
       console.error("search fruits failed", error);
-      wx.showToast({
-        title: error.message || "搜索失败",
-        icon: "none"
-      });
+      ui.showError(error, "搜索失败");
       this.setData({
         results: []
       });
@@ -139,8 +132,6 @@ Page({
 
   goDetail(event) {
     const { fruit } = event.detail;
-    wx.navigateTo({
-      url: `/pages/detail/index?id=${fruit._id}`
-    });
+    navigation.navigateToFruitDetail(fruit._id);
   }
 });

@@ -1,8 +1,21 @@
-const app = getApp();
+const authService = require("../../services/authService");
+const store = require("../../utils/store");
+const navigation = require("../../utils/navigation");
+const ui = require("../../utils/ui");
 
 Page({
   data: {
-    loading: false
+    loading: false,
+    inviteCode: "",
+    isInviteMode: false
+  },
+
+  onLoad(options) {
+    const inviteCode = String((options && options.inviteCode) || "").trim();
+    this.setData({
+      inviteCode,
+      isInviteMode: Boolean(inviteCode)
+    });
   },
 
   async handleLogin() {
@@ -11,42 +24,26 @@ Page({
     }
 
     this.setData({ loading: true });
-    wx.showLoading({
-      title: "登录中"
-    });
+    ui.showLoading(this.data.isInviteMode ? "加入中" : "登录中");
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "merchantLogin"
-      });
-      const data = result.result;
+      const data = this.data.isInviteMode
+        ? await authService.acceptInvite(this.data.inviteCode)
+        : await authService.merchantLogin();
 
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "登录失败");
-      }
-
-      app.globalData.openid = data.openid;
-      app.globalData.user = data.user;
-      app.globalData.shop = data.shop;
-      app.globalData.shopName = data.shop && data.shop.name ? data.shop.name : app.globalData.shopName;
-      app.globalData.shopLogo = data.shop && data.shop.logo ? data.shop.logo : "";
-
-      wx.showToast({
-        title: data.isNewShop ? "已创建店铺" : "登录成功",
-        icon: "success"
+      store.setAuth({
+        openid: data.openid,
+        user: data.user,
+        shop: data.shop
       });
 
-      wx.redirectTo({
-        url: "/pages/merchant/index"
-      });
+      ui.showSuccess(this.data.isInviteMode ? "已加入店铺" : data.isNewShop ? "已创建店铺" : "登录成功");
+      navigation.redirectTo("/pages/merchant/index");
     } catch (error) {
-      console.error("merchantLogin failed", error);
-      wx.showToast({
-        title: error.message || "登录失败",
-        icon: "none"
-      });
+      console.error("merchant login failed", error);
+      ui.showError(error, "登录失败");
     } finally {
-      wx.hideLoading();
+      ui.hideLoading();
       this.setData({ loading: false });
     }
   }

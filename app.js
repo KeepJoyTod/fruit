@@ -1,3 +1,5 @@
+const store = require("./utils/store");
+
 App({
   globalData: {
     envId: "cloud1-d1g40zhsfcb12d457",
@@ -21,5 +23,7 @@ App({
       env: this.globalData.envId,
       traceUser: true
     });
+
+    store.initStore();
   }
 });

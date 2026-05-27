@@ -25,6 +25,10 @@ async function getShopById(shopId) {
   return result.data || null;
 }
 
+function isShopOwner(openid, shop) {
+  return Boolean(shop && Array.isArray(shop.ownerIds) && shop.ownerIds.includes(openid));
+}
+
 exports.main = async () => {
   const wxContext = cloud.getWXContext();
   const openid = wxContext.OPENID;
@@ -42,14 +46,24 @@ exports.main = async () => {
   if (existingUser && existingUser.shopId) {
     const shop = await getShopById(existingUser.shopId);
 
-    return {
-      success: true,
-      openid,
-      user: existingUser,
-      shop,
-      isNewUser: false,
-      isNewShop: false
-    };
+    if (isShopOwner(openid, shop)) {
+      return {
+        success: true,
+        openid,
+        user: existingUser,
+        shop,
+        isNewUser: false,
+        isNewShop: false
+      };
+    }
+
+    await users.doc(existingUser._id).update({
+      data: {
+        role: "user",
+        shopId: "",
+        updateTime: now
+      }
+    });
   }
 
   const shopAddResult = await shops.add({

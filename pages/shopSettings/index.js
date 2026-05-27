@@ -1,27 +1,26 @@
-const app = getApp();
-
-function createForm(shop) {
-  const source = shop || {};
-
-  return {
-    name: source.name || "",
-    logo: source.logo || "",
-    logoTemp: "",
-    contactPhone: source.contactPhone || "",
-    address: source.address || "",
-    businessStatus: source.businessStatus || "open"
-  };
-}
+const shopService = require("../../services/shopService");
+const { chooseImages, uploadImage, isChooseCancel } = require("../../utils/upload");
+const store = require("../../utils/store");
+const authRequired = require("../../behaviors/authRequired");
+const navigation = require("../../utils/navigation");
+const ui = require("../../utils/ui");
+const { createShopForm, validateShopForm, buildShopPayload } = require("../../forms/shopForm");
 
 Page({
+  behaviors: [authRequired],
+
   data: {
     saving: false,
-    form: createForm(app.globalData.shop)
+    form: createShopForm(store.getShop())
   },
 
   onShow() {
+    if (!this.requireShopLogin()) {
+      return;
+    }
+
     this.setData({
-      form: createForm(app.globalData.shop)
+      form: createShopForm(store.getShop())
     });
   },
 
@@ -52,31 +51,23 @@ Page({
 
   async chooseLogo() {
     try {
-      const result = await wx.chooseMedia({
-        count: 1,
-        mediaType: ["image"],
-        sourceType: ["album", "camera"],
-        sizeType: ["compressed"]
-      });
-      const file = result.tempFiles && result.tempFiles[0];
+      const paths = await chooseImages({ count: 1 });
+      const filePath = paths[0];
 
-      if (!file || !file.tempFilePath) {
+      if (!filePath) {
         return;
       }
 
       this.setData({
-        "form.logoTemp": file.tempFilePath
+        "form.logoTemp": filePath
       });
     } catch (error) {
-      if (error && error.errMsg && error.errMsg.includes("cancel")) {
+      if (isChooseCancel(error)) {
         return;
       }
 
       console.error("choose shop logo failed", error);
-      wx.showToast({
-        title: "选择图片失败",
-        icon: "none"
-      });
+      ui.showToast("选择图片失败");
     }
   },
 
@@ -85,29 +76,15 @@ Page({
       return this.data.form.logo;
     }
 
-    const shop = app.globalData.shop;
-    const shopId = shop && shop._id ? shop._id : "unknown";
-    const extMatch = this.data.form.logoTemp.match(/\.[^.]+$/);
-    const ext = extMatch ? extMatch[0] : ".jpg";
-    const cloudPath = `shops/${shopId}/logo-${Date.now()}-${Math.random().toString(16).slice(2)}${ext}`;
-    const result = await wx.cloud.uploadFile({
-      cloudPath,
-      filePath: this.data.form.logoTemp
+    return uploadImage(this.data.form.logoTemp, {
+      root: "shops",
+      ownerId: this.getRequiredShopId() || "unknown",
+      folder: "logo"
     });
-
-    return result.fileID;
   },
 
   validateForm() {
-    if (!app.globalData.shop || !app.globalData.shop._id) {
-      return "请先完成商家登录";
-    }
-
-    if (!this.data.form.name.trim()) {
-      return "请填写店铺名称";
-    }
-
-    return "";
+    return validateShopForm(this.data.form, this.getRequiredShopId());
   },
 
   async submit() {
@@ -117,58 +94,37 @@ Page({
 
     const errorMessage = this.validateForm();
     if (errorMessage) {
-      wx.showToast({
-        title: errorMessage,
-        icon: "none"
-      });
+      ui.showToast(errorMessage);
       return;
     }
 
     this.setData({ saving: true });
-    wx.showLoading({
-      title: "保存中"
-    });
+    ui.showLoading("保存中");
 
     try {
       const logo = await this.uploadLogo();
-      const result = await wx.cloud.callFunction({
-        name: "updateShop",
-        data: {
-          shopId: app.globalData.shop._id,
-          name: this.data.form.name,
-          logo,
-          contactPhone: this.data.form.contactPhone,
-          address: this.data.form.address,
-          businessStatus: this.data.form.businessStatus
-        }
-      });
-      const data = result.result;
+      const data = await shopService.updateShop(
+        buildShopPayload(this.data.form, this.getRequiredShopId(), logo)
+      );
 
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "店铺保存失败");
-      }
-
-      app.globalData.shop = data.shop;
-      app.globalData.shopName = data.shop && data.shop.name ? data.shop.name : app.globalData.shopName;
-      app.globalData.shopLogo = data.shop && data.shop.logo ? data.shop.logo : "";
-      app.globalData.shouldRefreshHomeFruits = true;
+      store.setShop(data.shop);
+      store.markHomeFruitsChanged();
 
       this.setData({
-        form: createForm(data.shop)
+        form: createShopForm(data.shop)
       });
 
-      wx.showToast({
-        title: "已保存",
-        icon: "success"
-      });
+      ui.showSuccess("已保存");
+      navigation.redirectToMerchantHome();
     } catch (error) {
       console.error("update shop failed", error);
-      wx.showToast({
-        title: error.message || "店铺保存失败",
-        icon: "none"
-      });
+      if (this.handleShopAccessDenied(error)) {
+        return;
+      }
+
+      ui.showError(error, "店铺保存失败");
     } finally {
-      wx.hideLoading();
+      ui.hideLoading();
       this.setData({ saving: false });
     }
   }

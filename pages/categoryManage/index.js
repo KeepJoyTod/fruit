@@ -1,22 +1,34 @@
-const app = getApp();
+const categoryService = require("../../services/categoryService");
+const {
+  loadMerchantCategories,
+  clearMerchantCategoryCache,
+  clearPublicCategoryCache
+} = require("../../utils/category");
+const store = require("../../utils/store");
+const authRequired = require("../../behaviors/authRequired");
+const navigation = require("../../utils/navigation");
+const ui = require("../../utils/ui");
+const {
+  createEmptyCategoryForm,
+  createCategoryForm,
+  validateCategoryForm,
+  buildCategoryPayload
+} = require("../../forms/categoryForm");
 
-function createEmptyForm() {
-  return {
-    categoryId: "",
-    name: "",
-    subTitle: "",
-    description: "",
-    sort: ""
-  };
+function clearCategoryCaches() {
+  clearMerchantCategoryCache(store.getShopId());
+  clearPublicCategoryCache();
 }
 
 Page({
+  behaviors: [authRequired],
+
   data: {
     loading: false,
     saving: false,
     editing: false,
     categories: [],
-    form: createEmptyForm()
+    form: createEmptyCategoryForm()
   },
 
   onShow() {
@@ -24,50 +36,22 @@ Page({
   },
 
   async loadCategories() {
-    const shop = app.globalData.shop;
-
-    if (!shop || !shop._id) {
-      wx.showToast({
-        title: "请先登录",
-        icon: "none"
-      });
-      wx.redirectTo({
-        url: "/pages/login/index"
-      });
+    if (!this.requireShopLogin()) {
       return;
     }
 
     this.setData({ loading: true });
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "listMerchantCategories",
-        data: {
-          shopId: shop._id
-        }
-      });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "分类加载失败");
-      }
-
-      const categories = data.categories || [];
-      app.globalData.categories = categories;
-      app.globalData.categoryMap = categories.reduce((map, item) => {
-        if (item && item._id) {
-          map[item._id] = item;
-        }
-        return map;
-      }, {});
-
+      const categories = await loadMerchantCategories(store.getShopId());
       this.setData({ categories });
     } catch (error) {
       console.error("load merchant categories failed", error);
-      wx.showToast({
-        title: error.message || "分类加载失败",
-        icon: "none"
-      });
+      if (this.handleShopAccessDenied(error)) {
+        return;
+      }
+
+      ui.showError(error, "分类加载失败");
     } finally {
       this.setData({ loading: false });
     }
@@ -107,33 +91,19 @@ Page({
 
     this.setData({
       editing: true,
-      form: {
-        categoryId: category._id,
-        name: category.name || "",
-        subTitle: category.subTitle || "",
-        description: category.description || "",
-        sort: typeof category.sort === "number" ? String(category.sort) : ""
-      }
+      form: createCategoryForm(category)
     });
   },
 
   cancelEdit() {
     this.setData({
       editing: false,
-      form: createEmptyForm()
+      form: createEmptyCategoryForm()
     });
   },
 
   validateForm() {
-    if (!this.data.form.name.trim()) {
-      return "请填写分类名称";
-    }
-
-    if (!app.globalData.shop || !app.globalData.shop._id) {
-      return "请先完成商家登录";
-    }
-
-    return "";
+    return validateCategoryForm(this.data.form, store.getShopId());
   },
 
   async submit() {
@@ -143,54 +113,33 @@ Page({
 
     const errorMessage = this.validateForm();
     if (errorMessage) {
-      wx.showToast({
-        title: errorMessage,
-        icon: "none"
-      });
+      ui.showToast(errorMessage);
       return;
     }
 
     this.setData({ saving: true });
-    wx.showLoading({
-      title: "保存中"
-    });
+    ui.showLoading("保存中");
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "saveCategory",
-        data: {
-          categoryId: this.data.form.categoryId,
-          shopId: app.globalData.shop._id,
-          name: this.data.form.name,
-          subTitle: this.data.form.subTitle,
-          description: this.data.form.description,
-          sort: this.data.form.sort
-        }
-      });
-      const data = result.result;
+      await categoryService.saveCategory(buildCategoryPayload(this.data.form, store.getShopId()));
 
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "分类保存失败");
-      }
-
-      wx.showToast({
-        title: "已保存",
-        icon: "success"
-      });
-
+      ui.showSuccess("已保存");
+      clearCategoryCaches();
       this.setData({
         editing: false,
-        form: createEmptyForm()
+        form: createEmptyCategoryForm()
       });
-      await this.loadCategories();
+      store.markHomeFruitsChanged();
+      navigation.redirectToMerchantHome();
     } catch (error) {
       console.error("save category failed", error);
-      wx.showToast({
-        title: error.message || "分类保存失败",
-        icon: "none"
-      });
+      if (this.handleShopAccessDenied(error)) {
+        return;
+      }
+
+      ui.showError(error, "分类保存失败");
     } finally {
-      wx.hideLoading();
+      ui.hideLoading();
       this.setData({ saving: false });
     }
   },
@@ -200,7 +149,7 @@ Page({
 
     wx.showModal({
       title: "删除分类",
-      content: `确认删除“${name}”吗？商品会自动移除此分类。`,
+      content: `确认删除"${name}"吗？商品会自动移除此分类。`,
       confirmText: "删除",
       confirmColor: "#b91c1c",
       success: (result) => {
@@ -212,41 +161,29 @@ Page({
   },
 
   async deleteCategory(categoryId) {
-    wx.showLoading({
-      title: "删除中"
-    });
+    ui.showLoading("删除中");
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "deleteCategory",
-        data: {
-          categoryId
-        }
-      });
-      const data = result.result;
+      await categoryService.deleteCategory(categoryId);
 
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "分类删除失败");
-      }
-
-      wx.showToast({
-        title: "已删除",
-        icon: "success"
-      });
+      ui.showSuccess("已删除");
 
       if (this.data.form.categoryId === categoryId) {
         this.cancelEdit();
       }
 
-      await this.loadCategories();
+      clearCategoryCaches();
+      store.markHomeFruitsChanged();
+      navigation.redirectToMerchantHome();
     } catch (error) {
       console.error("delete category failed", error);
-      wx.showToast({
-        title: error.message || "分类删除失败",
-        icon: "none"
-      });
+      if (this.handleShopAccessDenied(error)) {
+        return;
+      }
+
+      ui.showError(error, "分类删除失败");
     } finally {
-      wx.hideLoading();
+      ui.hideLoading();
     }
   }
 });

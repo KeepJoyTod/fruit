@@ -1,18 +1,12 @@
-const { getMinPrice, formatPrice, buildFruitGallery, normalizeImageList, pickFruitMainImage } = require("../../utils/fruit");
-const app = getApp();
-
-function updateCategoryCache(categories) {
-  const list = Array.isArray(categories) ? categories : [];
-  app.globalData.categories = list;
-  app.globalData.categoryMap = list.reduce((map, item) => {
-    if (item && item._id) {
-      map[item._id] = item;
-    }
-    return map;
-  }, {});
-}
+const fruitService = require("../../services/fruitService");
+const { normalizeFruitDetail } = require("../../models/fruitMapper");
+const { getSkuKey } = require("../../utils/fruit");
+const { loadPublicCategories } = require("../../utils/category");
+const navigation = require("../../utils/navigation");
+const ui = require("../../utils/ui");
 
 function getCachedRelatedCategories(categoryIds) {
+  const app = getApp();
   const categoryMap = app.globalData.categoryMap || {};
   return (categoryIds || []).map((id) => categoryMap[id]).filter(Boolean);
 }
@@ -28,6 +22,9 @@ Page({
     currentImageIndex: 0,
     selectedSpecIndex: 0,
     selectedSpec: null,
+    selectedSkuIndex: 0,
+    selectedSku: null,
+    selectedSpecValueMap: {},
     relatedCategories: [],
     detailImageItems: []
   },
@@ -54,69 +51,38 @@ Page({
 
   async loadFruit() {
     if (!this.data.fruitId) {
-      wx.showToast({
-        title: "缺少商品信息",
-        icon: "none"
-      });
+      ui.showToast("缺少商品信息");
       return;
     }
 
     this.setData({ loading: true });
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "getFruitDetail",
-        data: {
-          fruitId: this.data.fruitId
-        }
+      const data = await fruitService.getFruitDetail({
+        fruitId: this.data.fruitId
       });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "商品加载失败");
-      }
-
-      const specs = (data.fruit.specs || []).map((spec) => ({
-        ...spec,
-        weightText: spec.weight || "未填写重量",
-        stockNumber: Number(spec.stock || 0),
-        priceText: formatPrice(spec.price)
-      }));
-      const detailImages = normalizeImageList(data.fruit.detailImages);
-      const fruit = {
-        ...data.fruit,
-        mainImage: pickFruitMainImage(data.fruit),
-        categoryIds: data.fruit.categoryIds || [],
-        tags: data.fruit.tags || [],
-        detailImages,
-        specs
-      };
-      const galleryImages = buildFruitGallery(fruit);
-      const defaultSpecIndex = specs.findIndex((spec) => spec.stockNumber > 0);
-      const selectedSpecIndex = defaultSpecIndex >= 0 ? defaultSpecIndex : 0;
+      const detailState = normalizeFruitDetail(data.fruit);
+      const selectedSpecValueMap = this.buildSelectedSpecValueMap(detailState.fruit, detailState.selectedSku);
+      detailState.fruit.specGroups = this.buildDisplaySpecGroups(detailState.fruit, selectedSpecValueMap);
 
       this.setData({
-        fruit,
-        minPrice: formatPrice(getMinPrice(specs)),
-        galleryImages,
-        currentImage: galleryImages[0] || "",
+        fruit: detailState.fruit,
+        minPrice: detailState.minPrice,
+        galleryImages: detailState.galleryImages,
+        currentImage: detailState.currentImage,
         currentImageIndex: 0,
-        selectedSpecIndex,
-        selectedSpec: specs[selectedSpecIndex] || null,
-        detailImageItems: fruit.detailImages.map((url, index) => ({
-          url,
-          galleryIndex: galleryImages.indexOf(url),
-          key: `${url}_${index}`
-        }))
+        selectedSpecIndex: detailState.selectedSpecIndex,
+        selectedSpec: detailState.selectedSpec,
+        selectedSkuIndex: detailState.selectedSkuIndex,
+        selectedSku: detailState.selectedSku,
+        selectedSpecValueMap,
+        detailImageItems: detailState.detailImageItems
       });
 
-      await this.loadRelatedCategories(fruit.categoryIds);
+      await this.loadRelatedCategories(detailState.fruit.categoryIds);
     } catch (error) {
       console.error("load fruit detail failed", error);
-      wx.showToast({
-        title: error.message || "商品加载失败",
-        icon: "none"
-      });
+      ui.showError(error, "商品加载失败");
       this.setData({
         fruit: null,
         galleryImages: [],
@@ -124,6 +90,9 @@ Page({
         currentImageIndex: 0,
         selectedSpecIndex: 0,
         selectedSpec: null,
+        selectedSkuIndex: 0,
+        selectedSku: null,
+        selectedSpecValueMap: {},
         relatedCategories: [],
         detailImageItems: []
       });
@@ -149,16 +118,7 @@ Page({
     }
 
     try {
-      const result = await wx.cloud.callFunction({
-        name: "listPublicCategories"
-      });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "分类加载失败");
-      }
-
-      updateCategoryCache(data.categories || []);
+      await loadPublicCategories();
 
       this.setData({
         relatedCategories: getCachedRelatedCategories(categoryIds)
@@ -171,17 +131,86 @@ Page({
     }
   },
 
-  selectSpec(event) {
-    const index = Number(event.currentTarget.dataset.index);
-    const spec = this.data.fruit && this.data.fruit.specs ? this.data.fruit.specs[index] : null;
+  buildSelectedSpecValueMap(fruit, sku) {
+    const map = {};
+    const groups = fruit && fruit.specGroups ? fruit.specGroups : [];
+    const specValueIds = sku && Array.isArray(sku.specValueIds) ? sku.specValueIds : [];
 
-    if (!spec) {
+    groups.forEach((group, index) => {
+      if (specValueIds[index]) {
+        map[group.id] = specValueIds[index];
+      }
+    });
+
+    return map;
+  },
+
+  findSkuBySelectedMap(selectedSpecValueMap) {
+    const fruit = this.data.fruit;
+    const groups = fruit && fruit.specGroups ? fruit.specGroups : [];
+    const selectedIds = groups.map((group) => selectedSpecValueMap[group.id]).filter(Boolean);
+
+    if (!fruit || selectedIds.length !== groups.length) {
+      return {
+        sku: null,
+        index: -1
+      };
+    }
+
+    const key = getSkuKey(selectedIds);
+    const skus = fruit.skus || [];
+    const index = skus.findIndex((sku) => getSkuKey(sku.specValueIds) === key);
+
+    return {
+      sku: index >= 0 ? skus[index] : null,
+      index
+    };
+  },
+
+  isSpecValueDisabled(fruit, selectedSpecValueMap, groupId, valueId) {
+    const groups = fruit && fruit.specGroups ? fruit.specGroups : [];
+    const selectedMap = Object.assign({}, selectedSpecValueMap, {
+      [groupId]: valueId
+    });
+    const selectedIds = groups.map((group) => selectedMap[group.id]).filter(Boolean);
+
+    return !(fruit.skus || []).some((sku) => {
+      return sku.isAvailable && selectedIds.every((id) => sku.specValueIds.indexOf(id) >= 0);
+    });
+  },
+
+  buildDisplaySpecGroups(fruit, selectedSpecValueMap) {
+    const groups = fruit && fruit.specGroups ? fruit.specGroups : [];
+
+    return groups.map((group) => ({
+      ...group,
+      values: (group.values || []).map((value) => ({
+        ...value,
+        selected: selectedSpecValueMap[group.id] === value.id,
+        disabled: this.isSpecValueDisabled(fruit, selectedSpecValueMap, group.id, value.id)
+      }))
+    }));
+  },
+
+  selectSpecValue(event) {
+    const { groupId, valueId } = event.currentTarget.dataset;
+
+    if (!groupId || !valueId || this.isSpecValueDisabled(this.data.fruit, this.data.selectedSpecValueMap, groupId, valueId)) {
       return;
     }
 
+    const selectedSpecValueMap = Object.assign({}, this.data.selectedSpecValueMap, {
+      [groupId]: valueId
+    });
+    const matched = this.findSkuBySelectedMap(selectedSpecValueMap);
+
     this.setData({
-      selectedSpecIndex: index,
-      selectedSpec: spec
+      selectedSpecValueMap,
+      selectedSpecIndex: matched.index >= 0 ? matched.index : this.data.selectedSpecIndex,
+      selectedSpec: matched.sku || this.data.selectedSpec,
+      selectedSkuIndex: matched.index,
+      selectedSku: matched.sku,
+      "fruit.specGroups": this.buildDisplaySpecGroups(this.data.fruit, selectedSpecValueMap)
     });
   },
 
@@ -221,25 +250,18 @@ Page({
       return;
     }
 
-    wx.navigateTo({
-      url: `/pages/category/index?id=${id}`
-    });
+    navigation.navigateToCategory(id);
   },
 
   goPrimaryCategory() {
     const firstCategory = this.data.relatedCategories[0];
 
     if (!firstCategory) {
-      wx.showToast({
-        title: "暂无关联分类",
-        icon: "none"
-      });
+      ui.showToast("暂无关联分类");
       return;
     }
 
-    wx.navigateTo({
-      url: `/pages/category/index?id=${firstCategory._id}`
-    });
+    navigation.navigateToCategory(firstCategory._id);
   },
 
   copyName() {
@@ -256,18 +278,15 @@ Page({
 
   copySpecInfo() {
     const fruit = this.data.fruit;
-    const spec = this.data.selectedSpec;
+    const spec = this.data.selectedSku || this.data.selectedSpec;
 
     if (!fruit || !spec) {
-      wx.showToast({
-        title: "暂无规格信息",
-        icon: "none"
-      });
+      ui.showToast("暂无规格信息");
       return;
     }
 
     wx.setClipboardData({
-      data: `${fruit.name} ${spec.name} ${spec.weightText} ￥${spec.priceText} 库存${spec.stockNumber}`
+      data: `${fruit.name} ${spec.specText || spec.name || ""} ¥${spec.priceText} 库存${spec.stockText || spec.stockNumber}`
     });
   },
 
@@ -275,7 +294,7 @@ Page({
     const fruit = this.data.fruit;
 
     return {
-      title: fruit && fruit.name ? `${fruit.name} ￥${this.data.minPrice} 起` : "水果详情",
+      title: fruit && fruit.name ? `${fruit.name} ¥${this.data.minPrice} 起` : "水果详情",
       path: `/pages/detail/index?id=${this.data.fruitId}`,
       imageUrl: fruit && fruit.mainImage ? fruit.mainImage : ""
     };
@@ -285,7 +304,7 @@ Page({
     const fruit = this.data.fruit;
 
     return {
-      title: fruit && fruit.name ? `${fruit.name} ￥${this.data.minPrice} 起` : "水果详情",
+      title: fruit && fruit.name ? `${fruit.name} ¥${this.data.minPrice} 起` : "水果详情",
       query: `id=${this.data.fruitId}`,
       imageUrl: fruit && fruit.mainImage ? fruit.mainImage : ""
     };

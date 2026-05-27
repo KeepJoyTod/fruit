@@ -1,22 +1,19 @@
-const app = getApp();
 const { TAGS } = require("../../utils/constants");
-
-function updateCategoryCache(categories) {
-  const list = Array.isArray(categories) ? categories : [];
-  app.globalData.categories = list;
-  app.globalData.categoryMap = list.reduce((map, item) => {
-    if (item && item._id) {
-      map[item._id] = item;
-    }
-    return map;
-  }, {});
-}
+const fruitService = require("../../services/fruitService");
+const shopService = require("../../services/shopService");
+const { loadPublicCategories } = require("../../utils/category");
+const store = require("../../utils/store");
+const refreshOnHomeChanged = require("../../behaviors/refreshOnHomeChanged");
+const navigation = require("../../utils/navigation");
+const ui = require("../../utils/ui");
 
 Page({
+  behaviors: [refreshOnHomeChanged],
+
   data: {
-    shopName: app.globalData.shopName,
+    shopName: store.getShopName(),
     shopInitial: "店",
-    shopLogo: app.globalData.shopLogo,
+    shopLogo: store.getShopLogo(),
     announcement: "",
     contactPhone: "",
     address: "",
@@ -29,8 +26,12 @@ Page({
     fruits: []
   },
 
+  onHomeFruitsChanged() {
+    this.loadData();
+  },
+
   onShow() {
-    if (this.data.hasLoaded && !app.globalData.shouldRefreshHomeFruits) {
+    if (this.data.hasLoaded && !this.shouldRefreshHomeFruits()) {
       return;
     }
 
@@ -48,7 +49,7 @@ Page({
 
     try {
       await Promise.all([this.loadShop(), this.loadCategories(), this.loadFruits()]);
-      app.globalData.shouldRefreshHomeFruits = false;
+      this.clearHomeFruitsChanged();
       this.setData({
         hasLoaded: true
       });
@@ -61,22 +62,18 @@ Page({
 
   async loadShop() {
     try {
-      const result = await wx.cloud.callFunction({
-        name: "getPublicShop"
-      });
-      const data = result.result;
+      const data = await shopService.getPublicShop();
 
-      if (!data || !data.success || !data.shop) {
+      if (!data.shop) {
         return;
       }
 
       const shop = data.shop;
-      app.globalData.shopName = shop.name || app.globalData.shopName;
-      app.globalData.shopLogo = shop.logo || "";
+      store.setShop(shop);
 
       this.setData({
-        shopName: shop.name || app.globalData.shopName,
-        shopInitial: (shop.name || app.globalData.shopName || "店").slice(0, 1),
+        shopName: shop.name || store.getShopName(),
+        shopInitial: (shop.name || store.getShopName() || "店").slice(0, 1),
         shopLogo: shop.logo || "",
         announcement: shop.announcement || "",
         contactPhone: shop.contactPhone || "",
@@ -90,18 +87,9 @@ Page({
 
   async loadCategories() {
     try {
-      const result = await wx.cloud.callFunction({
-        name: "listPublicCategories"
-      });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "分类加载失败");
-      }
-
-      updateCategoryCache(data.categories || []);
+      const categories = await loadPublicCategories();
       this.setData({
-        categories: data.categories || []
+        categories
       });
     } catch (error) {
       console.error("load categories failed", error);
@@ -113,49 +101,32 @@ Page({
 
   async loadFruits() {
     try {
-      const result = await wx.cloud.callFunction({
-        name: "listPublicFruits",
-        data: {
-          tag: this.data.selectedTag,
-          page: 1,
-          pageSize: 20
-        }
+      const data = await fruitService.listPublicFruits({
+        tag: this.data.selectedTag,
+        page: 1,
+        pageSize: 20
       });
-      const data = result.result;
-
-      if (!data || !data.success) {
-        throw new Error((data && data.message) || "商品加载失败");
-      }
 
       this.setData({
         fruits: data.fruits || []
       });
     } catch (error) {
       console.error("load public fruits failed", error);
-      wx.showToast({
-        title: "商品加载失败",
-        icon: "none"
-      });
+      ui.showError(error, "商品加载失败");
     }
   },
 
   goSearch() {
-    wx.navigateTo({
-      url: "/pages/search/index"
-    });
+    navigation.navigateToSearch();
   },
 
   goLogin() {
-    wx.navigateTo({
-      url: "/pages/login/index"
-    });
+    navigation.navigateToLogin();
   },
 
   goCategory(event) {
     const { id } = event.currentTarget.dataset;
-    wx.navigateTo({
-      url: `/pages/category/index?id=${id}`
-    });
+    navigation.navigateToCategory(id);
   },
 
   selectTag(event) {
@@ -173,8 +144,6 @@ Page({
 
   goDetail(event) {
     const { fruit } = event.detail;
-    wx.navigateTo({
-      url: `/pages/detail/index?id=${fruit._id}`
-    });
+    navigation.navigateToFruitDetail(fruit._id);
   }
 });
