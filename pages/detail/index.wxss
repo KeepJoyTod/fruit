@@ -167,7 +167,48 @@
   border: 0;
 }
 
-.spec-item {
+.spec-group {
+  margin-bottom: 24rpx;
+}
+
+.spec-group-title {
+  margin-bottom: 14rpx;
+  color: #4b5563;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.spec-value-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.spec-value {
+  min-width: 136rpx;
+  min-height: 64rpx;
+  padding: 14rpx 22rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.4);
+  border-radius: 8rpx;
+  background: rgba(255, 255, 255, 0.92);
+  color: #243126;
+  font-size: 26rpx;
+  text-align: center;
+}
+
+.spec-value.is-selected {
+  border-color: #2f9e44;
+  background: #eef9e8;
+  color: #2f9e44;
+  font-weight: 700;
+}
+
+.spec-value.is-disabled {
+  color: #9ca3af;
+  background: rgba(243, 244, 246, 0.82);
+}
+
+.sku-summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -178,15 +219,6 @@
   border-radius: 20rpx;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 16rpx 36rpx rgba(122, 92, 44, 0.06);
-}
-
-.spec-item.is-selected {
-  border-color: #2f9e44;
-  box-shadow: 0 16rpx 36rpx rgba(47, 158, 68, 0.14);
-}
-
-.spec-item.is-disabled {
-  opacity: 0.72;
 }
 
 .spec-name {

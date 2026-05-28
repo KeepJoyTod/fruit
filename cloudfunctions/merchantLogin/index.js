@@ -28,6 +28,8 @@ async function getShopById(shopId) {
   return result.data || null;
 }
 
+function isShopOwner(openid, shop) {
+  return Boolean(shop && Array.isArray(shop.ownerIds) && shop.ownerIds.includes(openid));
 function pickShop(shop) {
   if (!shop) {
     return null;
@@ -70,6 +72,54 @@ exports.main = async () => {
     };
   }
 
+  const existingUser = await getUserByOpenid(openid);
+
+  if (existingUser && existingUser.shopId) {
+    const shop = await getShopById(existingUser.shopId);
+
+    if (isShopOwner(openid, shop)) {
+      return {
+        success: true,
+        openid,
+        user: existingUser,
+        shop,
+        isNewUser: false,
+        isNewShop: false
+      };
+    }
+
+    await users.doc(existingUser._id).update({
+      data: {
+        role: "user",
+        shopId: "",
+        updateTime: now
+      }
+    });
+  }
+
+  const shopAddResult = await shops.add({
+    data: {
+      name: DEFAULT_SHOP_NAME,
+      logo: DEFAULT_SHOP_LOGO,
+      announcement: "",
+      contactPhone: "",
+      address: "",
+      businessStatus: "open",
+      creatorId: openid,
+      ownerIds: [openid],
+      createTime: now,
+      updateTime: now
+    }
+  });
+
+  const shopId = shopAddResult._id;
+  const userData = {
+    openid,
+    role: "creator",
+    shopId,
+    createTime: now,
+    updateTime: now
+  };
   const user = await getUserByOpenid(openid);
   const shop = await getShopById(user && user.shopId);
 

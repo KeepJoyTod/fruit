@@ -81,6 +81,8 @@ async function queryFruits(condition, start, limit) {
       detailImages: true,
       origin: true,
       specs: true,
+      specGroups: true,
+      skus: true,
       status: true,
       categoryIds: true,
       createTime: true
@@ -130,6 +132,18 @@ function getMinPrice(specs) {
   }, 0);
 }
 
+function getMinSkuPrice(fruit) {
+  const skus = Array.isArray(fruit && fruit.skus) ? fruit.skus : [];
+  if (skus.length > 0) {
+    return skus.reduce((min, sku) => {
+      const price = Number(sku && sku.price ? sku.price : 0);
+      return min === 0 || (price > 0 && price < min) ? price : min;
+    }, 0);
+  }
+
+  return getMinPrice(fruit && fruit.specs);
+}
+
 exports.main = async (event) => {
   const payload = event || {};
   const keyword = normalizeKeyword(payload.keyword);
@@ -171,7 +185,7 @@ exports.main = async (event) => {
         tags: fruit.tags || [],
         mainImage: pickFruitMainImage(fruit),
         origin: fruit.origin || "",
-        minPrice: getMinPrice(fruit.specs),
+        minPrice: getMinSkuPrice(fruit),
         status: fruit.status || "on_sale",
         categoryIds: fruit.categoryIds || [],
         createTime: fruit.createTime

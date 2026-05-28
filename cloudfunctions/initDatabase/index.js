@@ -6,7 +6,7 @@ const app = tcb.init({
 
 const db = app.database();
 
-const COLLECTION_NAMES = ["users", "shops", "categories", "fruits"];
+const COLLECTION_NAMES = ["users", "shops", "categories", "fruits", "invites"];
 
 function isCollectionExistsError(error) {
   const message = String((error && error.message) || "");

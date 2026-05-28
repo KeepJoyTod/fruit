@@ -1,4 +1,5 @@
 const cloud = require("wx-server-sdk");
+const crypto = require("crypto");
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -8,10 +9,21 @@ const db = cloud.database();
 const shops = db.collection("shops");
 const invites = db.collection("invites");
 
-const INVITE_ROLE = "manager";
-
 function createCode() {
-  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  return crypto.randomBytes(16).toString("hex");
+}
+
+async function createUniqueCode() {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const code = createCode();
+    const result = await invites.where({ code }).limit(1).get();
+
+    if (!result.data || result.data.length === 0) {
+      return code;
+    }
+  }
+
+  throw new Error("Failed to create invite code");
 }
 
 async function getShop(shopId) {
@@ -50,7 +62,7 @@ exports.main = async (event) => {
     const shop = await getShop(shopId);
     assertCreator(openid, shop);
 
-    const code = createCode();
+    const code = await createUniqueCode();
     await invites.add({
       data: {
         shopId,

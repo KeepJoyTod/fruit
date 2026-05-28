@@ -1,5 +1,6 @@
 const fruitService = require("../../services/fruitService");
 const { normalizeFruitDetail } = require("../../models/fruitMapper");
+const { getSkuKey } = require("../../utils/fruit");
 const { loadPublicCategories } = require("../../utils/category");
 const navigation = require("../../utils/navigation");
 const ui = require("../../utils/ui");
@@ -21,6 +22,9 @@ Page({
     currentImageIndex: 0,
     selectedSpecIndex: 0,
     selectedSpec: null,
+    selectedSkuIndex: 0,
+    selectedSku: null,
+    selectedSpecValueMap: {},
     relatedCategories: [],
     detailImageItems: []
   },
@@ -58,6 +62,8 @@ Page({
         fruitId: this.data.fruitId
       });
       const detailState = normalizeFruitDetail(data.fruit);
+      const selectedSpecValueMap = this.buildSelectedSpecValueMap(detailState.fruit, detailState.selectedSku);
+      detailState.fruit.specGroups = this.buildDisplaySpecGroups(detailState.fruit, selectedSpecValueMap);
 
       this.setData({
         fruit: detailState.fruit,
@@ -67,6 +73,9 @@ Page({
         currentImageIndex: 0,
         selectedSpecIndex: detailState.selectedSpecIndex,
         selectedSpec: detailState.selectedSpec,
+        selectedSkuIndex: detailState.selectedSkuIndex,
+        selectedSku: detailState.selectedSku,
+        selectedSpecValueMap,
         detailImageItems: detailState.detailImageItems
       });
 
@@ -81,6 +90,9 @@ Page({
         currentImageIndex: 0,
         selectedSpecIndex: 0,
         selectedSpec: null,
+        selectedSkuIndex: 0,
+        selectedSku: null,
+        selectedSpecValueMap: {},
         relatedCategories: [],
         detailImageItems: []
       });
@@ -119,17 +131,86 @@ Page({
     }
   },
 
-  selectSpec(event) {
-    const index = Number(event.currentTarget.dataset.index);
-    const spec = this.data.fruit && this.data.fruit.specs ? this.data.fruit.specs[index] : null;
+  buildSelectedSpecValueMap(fruit, sku) {
+    const map = {};
+    const groups = fruit && fruit.specGroups ? fruit.specGroups : [];
+    const specValueIds = sku && Array.isArray(sku.specValueIds) ? sku.specValueIds : [];
 
-    if (!spec) {
+    groups.forEach((group, index) => {
+      if (specValueIds[index]) {
+        map[group.id] = specValueIds[index];
+      }
+    });
+
+    return map;
+  },
+
+  findSkuBySelectedMap(selectedSpecValueMap) {
+    const fruit = this.data.fruit;
+    const groups = fruit && fruit.specGroups ? fruit.specGroups : [];
+    const selectedIds = groups.map((group) => selectedSpecValueMap[group.id]).filter(Boolean);
+
+    if (!fruit || selectedIds.length !== groups.length) {
+      return {
+        sku: null,
+        index: -1
+      };
+    }
+
+    const key = getSkuKey(selectedIds);
+    const skus = fruit.skus || [];
+    const index = skus.findIndex((sku) => getSkuKey(sku.specValueIds) === key);
+
+    return {
+      sku: index >= 0 ? skus[index] : null,
+      index
+    };
+  },
+
+  isSpecValueDisabled(fruit, selectedSpecValueMap, groupId, valueId) {
+    const groups = fruit && fruit.specGroups ? fruit.specGroups : [];
+    const selectedMap = Object.assign({}, selectedSpecValueMap, {
+      [groupId]: valueId
+    });
+    const selectedIds = groups.map((group) => selectedMap[group.id]).filter(Boolean);
+
+    return !(fruit.skus || []).some((sku) => {
+      return sku.isAvailable && selectedIds.every((id) => sku.specValueIds.indexOf(id) >= 0);
+    });
+  },
+
+  buildDisplaySpecGroups(fruit, selectedSpecValueMap) {
+    const groups = fruit && fruit.specGroups ? fruit.specGroups : [];
+
+    return groups.map((group) => ({
+      ...group,
+      values: (group.values || []).map((value) => ({
+        ...value,
+        selected: selectedSpecValueMap[group.id] === value.id,
+        disabled: this.isSpecValueDisabled(fruit, selectedSpecValueMap, group.id, value.id)
+      }))
+    }));
+  },
+
+  selectSpecValue(event) {
+    const { groupId, valueId } = event.currentTarget.dataset;
+
+    if (!groupId || !valueId || this.isSpecValueDisabled(this.data.fruit, this.data.selectedSpecValueMap, groupId, valueId)) {
       return;
     }
 
+    const selectedSpecValueMap = Object.assign({}, this.data.selectedSpecValueMap, {
+      [groupId]: valueId
+    });
+    const matched = this.findSkuBySelectedMap(selectedSpecValueMap);
+
     this.setData({
-      selectedSpecIndex: index,
-      selectedSpec: spec
+      selectedSpecValueMap,
+      selectedSpecIndex: matched.index >= 0 ? matched.index : this.data.selectedSpecIndex,
+      selectedSpec: matched.sku || this.data.selectedSpec,
+      selectedSkuIndex: matched.index,
+      selectedSku: matched.sku,
+      "fruit.specGroups": this.buildDisplaySpecGroups(this.data.fruit, selectedSpecValueMap)
     });
   },
 
@@ -197,7 +278,7 @@ Page({
 
   copySpecInfo() {
     const fruit = this.data.fruit;
-    const spec = this.data.selectedSpec;
+    const spec = this.data.selectedSku || this.data.selectedSpec;
 
     if (!fruit || !spec) {
       ui.showToast("暂无规格信息");
@@ -205,6 +286,7 @@ Page({
     }
 
     wx.setClipboardData({
+      data: `${fruit.name} ${spec.specText || spec.name || ""} ¥${spec.priceText} 库存${spec.stockText || spec.stockNumber}`
       data: `${fruit.name} ${spec.name} ${spec.weightText} ¥${spec.priceText} 库存${spec.stockNumber}`
     });
   },

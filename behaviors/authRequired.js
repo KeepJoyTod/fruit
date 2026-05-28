@@ -1,10 +1,11 @@
 const store = require("../utils/store");
 const navigation = require("../utils/navigation");
 const ui = require("../utils/ui");
+const { isShopAccessDenied } = require("../utils/permission");
 
 module.exports = Behavior({
   methods: {
-    getRequiredShopId() {
+    getRequiredShopId() {     
       return store.getShopId();
     },
 
@@ -26,6 +27,17 @@ module.exports = Behavior({
 
       navigation.redirectTo(requestOptions.url || "/pages/login/index");
       return false;
+    },
+
+    handleShopAccessDenied(error) {
+      if (!isShopAccessDenied(error)) {
+        return false;
+      }
+
+      store.clearAuth();
+      ui.showToast("权限已失效，请重新登录");
+      navigation.redirectToLogin();
+      return true;
     }
   }
 });

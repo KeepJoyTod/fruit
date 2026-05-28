@@ -30,6 +30,7 @@ async function callCloud(name, data, options) {
     const result = response.result || {};
 
     if (!result.success) {
+      throw new Error(getErrorMessage(result, requestOptions.errorMessage));
       throw createCloudError(result, requestOptions.errorMessage);
     }
 

@@ -118,6 +118,10 @@ Page({
       navigation.redirectToMerchantHome();
     } catch (error) {
       console.error("update shop failed", error);
+      if (this.handleShopAccessDenied(error)) {
+        return;
+      }
+
       ui.showError(error, "店铺保存失败");
     } finally {
       ui.hideLoading();

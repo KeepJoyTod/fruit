@@ -67,6 +67,7 @@ Page({
       businessStatus: shop.businessStatus || "open",
       announcement: shop.announcement || "",
       role,
+      roleText: role ? ` · ${role}` : "",
       roleText: roleText ? ` · ${roleText}` : "",
       managementItems: isCreator ? BASE_MANAGEMENT_ITEMS.concat(CREATOR_MANAGEMENT_ITEM) : BASE_MANAGEMENT_ITEMS
     });
@@ -93,6 +94,10 @@ Page({
       this.applyFilter();
     } catch (error) {
       console.error("load fruits failed", error);
+      if (this.handleShopAccessDenied(error)) {
+        return;
+      }
+
       ui.showError(error, "商品加载失败");
     }
   },

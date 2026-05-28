@@ -10,6 +10,26 @@ const users = db.collection("users");
 const shops = db.collection("shops");
 const invites = db.collection("invites");
 
+async function claimInvite(inviteId, openid) {
+  const result = await invites
+    .where({
+      _id: inviteId,
+      status: "active"
+    })
+    .update({
+      data: {
+        status: "used",
+        usedBy: openid,
+        usedTime: db.serverDate(),
+        updateTime: db.serverDate()
+      }
+    });
+
+  if (!result.stats || result.stats.updated !== 1) {
+    throw new Error("Invite is invalid");
+  }
+}
+
 async function getUserByOpenid(openid) {
   const result = await users.where({ openid }).limit(1).get();
   return result.data[0] || null;
@@ -85,6 +105,8 @@ exports.main = async (event) => {
       throw new Error("Shop not found");
     }
 
+    await claimInvite(invite._id, openid);
+
     await shops.doc(invite.shopId).update({
       data: {
         ownerIds: _.addToSet(openid),
@@ -93,6 +115,9 @@ exports.main = async (event) => {
     });
 
     const existingUser = await getUserByOpenid(openid);
+    const userData = {
+      openid,
+      role: shop.creatorId === openid ? "creator" : "owner",
     const role = shop.creatorId === openid ? "creator" : normalizeInviteRole(invite.role);
     const userData = {
       openid,
@@ -111,15 +136,6 @@ exports.main = async (event) => {
         }
       });
     }
-
-    await invites.doc(invite._id).update({
-      data: {
-        status: "used",
-        usedBy: openid,
-        usedTime: db.serverDate(),
-        updateTime: db.serverDate()
-      }
-    });
 
     const updatedShop = await getShop(invite.shopId);
     const user = await getUserByOpenid(openid);

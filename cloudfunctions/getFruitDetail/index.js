@@ -30,6 +30,8 @@ function pickFruit(fruit, shopName) {
     description: fruit.description || "",
     origin: fruit.origin || "",
     specs: fruit.specs || [],
+    specGroups: fruit.specGroups || [],
+    skus: fruit.skus || [],
     status: fruit.status || "on_sale",
     createTime: fruit.createTime,
     updateTime: fruit.updateTime

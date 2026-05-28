@@ -18,9 +18,84 @@ function normalizeSpecs(specs) {
       name: String(spec.name || "").trim(),
       weight: String(spec.weight || "").trim(),
       price: Number(spec.price || 0),
-      stock: Number(spec.stock || 0)
+      stock: String(spec.stock == null ? "" : spec.stock).trim()
     }))
     .filter((spec) => spec.name && spec.price > 0);
+}
+
+function normalizePrice(value) {
+  const price = Number(value || 0);
+  return Number.isFinite(price) ? price : 0;
+}
+
+function normalizeStock(value) {
+  return String(value == null ? "" : value).trim();
+}
+
+function buildSkuText(specGroups, specValueIds) {
+  const valueMap = {};
+  (specGroups || []).forEach((group) => {
+    (group.values || []).forEach((value) => {
+      valueMap[value.id] = value.name;
+    });
+  });
+
+  return (specValueIds || []).map((id) => valueMap[id]).filter(Boolean).join(" / ");
+}
+
+function normalizeSpecGroups(specGroups) {
+  if (!Array.isArray(specGroups)) {
+    return [];
+  }
+
+  return specGroups
+    .map((group, groupIndex) => {
+      const groupId = String(group && group.id ? group.id : `group_${groupIndex + 1}`);
+      const values = Array.isArray(group && group.values) ? group.values : [];
+
+      return {
+        id: groupId,
+        name: String((group && group.name) || "").trim(),
+        values: values
+          .map((value, valueIndex) => ({
+            id: String(value && value.id ? value.id : `${groupId}_value_${valueIndex + 1}`),
+            name: String((value && value.name) || "").trim()
+          }))
+          .filter((value) => value.name)
+      };
+    })
+    .filter((group) => group.name && group.values.length > 0);
+}
+
+function normalizeSkus(skus, specGroups) {
+  const validValueIds = {};
+  specGroups.forEach((group) => {
+    group.values.forEach((value) => {
+      validValueIds[value.id] = true;
+    });
+  });
+
+  if (!Array.isArray(skus)) {
+    return [];
+  }
+
+  return skus
+    .map((sku, index) => {
+      const specValueIds = (Array.isArray(sku && sku.specValueIds) ? sku.specValueIds : [])
+        .map((id) => String(id || ""))
+        .filter((id) => validValueIds[id]);
+
+      return {
+        id: String((sku && sku.id) || `sku_${index + 1}`),
+        specValueIds,
+        specText: buildSkuText(specGroups, specValueIds),
+        price: normalizePrice(sku && sku.price),
+        stock: normalizeStock(sku && sku.stock),
+        image: String((sku && sku.image) || "").trim(),
+        skuCode: String((sku && sku.skuCode) || "").trim()
+      };
+    })
+    .filter((sku) => sku.specValueIds.length === specGroups.length && sku.price > 0);
 }
 
 function normalizeStringList(list) {
@@ -67,6 +142,8 @@ exports.main = async (event) => {
   const categoryIds = normalizeStringList(payload.categoryIds);
   const tags = normalizeStringList(payload.tags);
   const specs = normalizeSpecs(payload.specs);
+  const specGroups = normalizeSpecGroups(payload.specGroups);
+  const skus = normalizeSkus(payload.skus, specGroups);
   const status = normalizeStatus(payload.status);
 
   if (!openid) {
@@ -90,10 +167,10 @@ exports.main = async (event) => {
     };
   }
 
-  if (specs.length === 0) {
+  if (specGroups.length === 0 || skus.length === 0) {
     return {
       success: false,
-      message: "请至少填写一个有效规格"
+      message: "请至少填写一个有效SKU"
     };
   }
 
@@ -117,6 +194,8 @@ exports.main = async (event) => {
         description,
         origin,
         specs,
+        specGroups,
+        skus,
         status,
         updateTime: now
       }

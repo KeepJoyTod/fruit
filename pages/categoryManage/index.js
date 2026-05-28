@@ -47,6 +47,10 @@ Page({
       this.setData({ categories });
     } catch (error) {
       console.error("load merchant categories failed", error);
+      if (this.handleShopAccessDenied(error)) {
+        return;
+      }
+
       ui.showError(error, "分类加载失败");
     } finally {
       this.setData({ loading: false });
@@ -129,6 +133,10 @@ Page({
       navigation.redirectToMerchantHome();
     } catch (error) {
       console.error("save category failed", error);
+      if (this.handleShopAccessDenied(error)) {
+        return;
+      }
+
       ui.showError(error, "分类保存失败");
     } finally {
       ui.hideLoading();
@@ -169,6 +177,10 @@ Page({
       navigation.redirectToMerchantHome();
     } catch (error) {
       console.error("delete category failed", error);
+      if (this.handleShopAccessDenied(error)) {
+        return;
+      }
+
       ui.showError(error, "分类删除失败");
     } finally {
       ui.hideLoading();

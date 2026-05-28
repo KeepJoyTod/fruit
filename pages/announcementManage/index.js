@@ -76,6 +76,10 @@ Page({
       navigation.redirectToMerchantHome();
     } catch (error) {
       console.error("publish announcement failed", error);
+      if (this.handleShopAccessDenied(error)) {
+        return;
+      }
+
       ui.showError(error, "公告发布失败");
     } finally {
       ui.hideLoading();

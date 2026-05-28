@@ -1,3 +1,12 @@
+const {
+  createId,
+  normalizeImageList,
+  pickFruitMainImage,
+  normalizeSkuData,
+  buildSkusFromGroups,
+  normalizeSpecGroups,
+  normalizeSkus
+} = require("../utils/fruit");
 const { normalizeImageList, pickFruitMainImage } = require("../utils/fruit");
 
 const MAX_DETAIL_IMAGES = 9;
@@ -11,6 +20,28 @@ function createEmptySpec() {
   };
 }
 
+function createEmptySpecValue() {
+  return {
+    id: createId("value"),
+    name: ""
+  };
+}
+
+function createEmptySpecGroup(name) {
+  return {
+    id: createId("group"),
+    name: name || "",
+    values: [createEmptySpecValue()]
+  };
+}
+
+function createDefaultSpecGroups() {
+  return [createEmptySpecGroup("规格")];
+}
+
+function createEmptyFruitForm() {
+  const specGroups = createDefaultSpecGroups();
+
 function createEmptyFruitForm() {
   return {
     name: "",
@@ -21,6 +52,9 @@ function createEmptyFruitForm() {
     tags: [],
     categoryIds: [],
     status: "on_sale",
+    specs: [createEmptySpec()],
+    specGroups,
+    skus: buildSkusFromGroups(specGroups, [])
     specs: [createEmptySpec()]
   };
 }
@@ -34,6 +68,7 @@ function mapSelectedValues(values) {
 
 function buildEditFruitState(fruit) {
   const specs = Array.isArray(fruit && fruit.specs) && fruit.specs.length > 0 ? fruit.specs : [createEmptySpec()];
+  const skuData = normalizeSkuData(fruit);
   const mainImage = pickFruitMainImage(fruit);
   const detailImages = normalizeImageList(fruit && fruit.detailImages);
 
@@ -52,6 +87,9 @@ function buildEditFruitState(fruit) {
       tags: (fruit && fruit.tags) || [],
       categoryIds: (fruit && fruit.categoryIds) || [],
       status: (fruit && fruit.status) || "on_sale",
+      specs,
+      specGroups: skuData.specGroups.length > 0 ? skuData.specGroups : createDefaultSpecGroups(),
+      skus: skuData.skus.length > 0 ? skuData.skus : buildSkusFromGroups(skuData.specGroups, [])
       specs
     }
   };
@@ -82,6 +120,14 @@ function validateFruitForm(options) {
     return "请选择商品主图";
   }
 
+  const specGroups = normalizeSpecGroups(form.specGroups);
+  const skus = normalizeSkus(form.skus, specGroups);
+  if (specGroups.length === 0) {
+    return "请至少填写一个规格项";
+  }
+
+  if (skus.length === 0) {
+    return "请至少填写一个有效SKU";
   const validSpecs = (form.specs || []).filter((spec) => spec.name && Number(spec.price) > 0);
   if (validSpecs.length === 0) {
     return "请至少填写一个有效规格";
@@ -95,6 +141,9 @@ function validateFruitForm(options) {
 }
 
 function buildFruitPayload(form, extra) {
+  const specGroups = normalizeSpecGroups(form.specGroups);
+
+  return Object.assign({
   return Object.assign({}, extra || {}, {
     name: form.name,
     mainImage: form.mainImage,
@@ -104,6 +153,10 @@ function buildFruitPayload(form, extra) {
     categoryIds: form.categoryIds,
     tags: form.tags,
     status: form.status,
+    specs: form.specs,
+    specGroups,
+    skus: normalizeSkus(form.skus, specGroups)
+  }, extra || {});
     specs: form.specs
   });
 }
@@ -111,6 +164,9 @@ function buildFruitPayload(form, extra) {
 module.exports = {
   MAX_DETAIL_IMAGES,
   createEmptySpec,
+  createEmptySpecValue,
+  createEmptySpecGroup,
+  createDefaultSpecGroups,
   createEmptyFruitForm,
   mapSelectedValues,
   buildEditFruitState,

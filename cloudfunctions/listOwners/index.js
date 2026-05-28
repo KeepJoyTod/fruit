@@ -73,6 +73,11 @@ exports.main = async (event) => {
       isCreator: true,
       owners: ownerIds.map((ownerOpenid) => {
         const user = userMap[ownerOpenid] || {};
+        return {
+          openid: ownerOpenid,
+          displayName: user.nickName || user.name || `用户 ${ownerOpenid.slice(-6)}`,
+          role: ownerOpenid === shop.creatorId ? "creator" : "owner",
+          roleText: ownerOpenid === shop.creatorId ? "店主" : "Owner",
         const role = normalizeRole(ownerOpenid, shop, user);
         return {
           openid: ownerOpenid,

@@ -8,6 +8,14 @@ const navigation = require("../../utils/navigation");
 const ui = require("../../utils/ui");
 const {
   MAX_DETAIL_IMAGES,
+  createEmptySpecGroup,
+  createEmptySpecValue,
+  createEmptyFruitForm,
+  buildFruitPayload,
+  toggleSelectedMap,
+  validateFruitForm
+} = require("../../forms/fruitForm");
+const { buildSkusFromGroups } = require("../../utils/fruit");
   createEmptySpec,
   createEmptyFruitForm,
   toggleSelectedMap,
@@ -51,6 +59,7 @@ Page({
       this.setData({ categories });
     } catch (error) {
       console.error("load publish categories failed", error);
+      this.handleShopAccessDenied(error);
     }
   },
 
@@ -154,19 +163,155 @@ Page({
     });
   },
 
-  onSpecInput(event) {
-    const { index, field } = event.currentTarget.dataset;
-    const specs = this.data.form.specs.slice();
-    specs[index][field] = event.detail.value;
+  syncSkus(specGroups) {
+    return buildSkusFromGroups(specGroups, this.data.form.skus);
+  },
+
+  getSpecGroupIndex(specGroups, groupId) {
+    return specGroups.findIndex((group) => group.id === groupId);
+  },
+
+  getSpecValueIndex(values, valueId) {
+    return values.findIndex((value) => value.id === valueId);
+  },
+
+  onSpecGroupNameInput(event) {
+    const groupId = event.currentTarget.dataset.groupId;
+    const specGroups = this.data.form.specGroups.slice();
+    const groupIndex = this.getSpecGroupIndex(specGroups, groupId);
+
+    if (groupIndex < 0) {
+      return;
+    }
+
+    specGroups[groupIndex] = Object.assign({}, specGroups[groupIndex], {
+      name: event.detail.value
+    });
 
     this.setData({
-      "form.specs": specs
+      "form.specGroups": specGroups,
+      "form.skus": this.syncSkus(specGroups)
+  },
+
+  uploadDetailImages() {
+    return uploadImages(this.data.detailImageTemps, {
+      root: "fruits",
+      ownerId: getUploadShopId(),
+      folder: "detail"
     });
   },
 
-  addSpec() {
+  onSpecValueInput(event) {
+    const { groupId, valueId } = event.currentTarget.dataset;
+    const specGroups = this.data.form.specGroups.map((group) => ({
+      ...group,
+      values: group.values.slice()
+    }));
+    const groupIndex = this.getSpecGroupIndex(specGroups, groupId);
+
+    if (groupIndex < 0) {
+      return;
+    }
+
+    const valueIndex = this.getSpecValueIndex(specGroups[groupIndex].values, valueId);
+    if (valueIndex < 0) {
+      return;
+    }
+
+    specGroups[groupIndex].values[valueIndex] = Object.assign({}, specGroups[groupIndex].values[valueIndex], {
+      name: event.detail.value
+    });
+
     this.setData({
-      "form.specs": this.data.form.specs.concat(createEmptySpec())
+      "form.specGroups": specGroups,
+      "form.skus": this.syncSkus(specGroups)
+    });
+  },
+
+  addSpecGroup() {
+    const specGroups = this.data.form.specGroups.concat(createEmptySpecGroup(""));
+    this.setData({
+      "form.specGroups": specGroups,
+      "form.skus": this.syncSkus(specGroups)
+    });
+  },
+
+  removeSpecGroup(event) {
+    const groupId = event.currentTarget.dataset.groupId;
+    const specGroups = this.data.form.specGroups.slice();
+    const groupIndex = this.getSpecGroupIndex(specGroups, groupId);
+
+    if (groupIndex < 0) {
+      return;
+    }
+  toggleTag(event) {
+    const tag = event.currentTarget.dataset.tag;
+    const selectedTagMap = toggleSelectedMap(this.data.selectedTagMap, tag);
+
+    specGroups.splice(groupIndex, 1);
+    this.setData({
+      "form.specGroups": specGroups,
+      "form.skus": this.syncSkus(specGroups)
+    });
+  },
+
+  addSpecValue(event) {
+    const groupId = event.currentTarget.dataset.groupId;
+    const specGroups = this.data.form.specGroups.map((group) => ({
+      ...group,
+      values: group.values.slice()
+    }));
+    const groupIndex = this.getSpecGroupIndex(specGroups, groupId);
+
+    if (groupIndex < 0) {
+      return;
+    }
+  toggleCategory(event) {
+    const categoryId = event.currentTarget.dataset.id;
+    const selectedCategoryMap = toggleSelectedMap(this.data.selectedCategoryMap, categoryId);
+
+    specGroups[groupIndex].values.push(createEmptySpecValue());
+
+    this.setData({
+      "form.specGroups": specGroups,
+      "form.skus": this.syncSkus(specGroups)
+    });
+  },
+
+  removeSpecValue(event) {
+    const { groupId, valueId } = event.currentTarget.dataset;
+    const specGroups = this.data.form.specGroups.map((group) => ({
+      ...group,
+      values: group.values.slice()
+    }));
+    const groupIndex = this.getSpecGroupIndex(specGroups, groupId);
+
+    if (groupIndex < 0) {
+      return;
+    }
+
+    const valueIndex = this.getSpecValueIndex(specGroups[groupIndex].values, valueId);
+    if (valueIndex < 0) {
+      return;
+    }
+
+    specGroups[groupIndex].values.splice(valueIndex, 1);
+
+    this.setData({
+      "form.specGroups": specGroups,
+      "form.skus": this.syncSkus(specGroups)
+    });
+  },
+
+  onSkuInput(event) {
+    const { index, field } = event.currentTarget.dataset;
+    const skus = this.data.form.skus.slice();
+    skus[index] = Object.assign({}, skus[index], {
+      [field]: event.detail.value
+    });
+
+    this.setData({
+      "form.skus": skus
     });
   },
 
@@ -217,6 +362,11 @@ Page({
       const mainImage = this.data.form.mainImage || (await this.uploadMainImage());
       const detailImages = await this.uploadDetailImages();
 
+      await fruitService.createFruit(buildFruitPayload(this.data.form, {
+        shopId: this.getRequiredShopId(),
+        mainImage,
+        detailImages
+      }));
       await fruitService.createFruit({
         shopId: this.getRequiredShopId(),
         name: this.data.form.name,
@@ -235,6 +385,10 @@ Page({
       navigation.redirectToMerchantHome();
     } catch (error) {
       console.error("createFruit failed", error);
+      if (this.handleShopAccessDenied(error)) {
+        return;
+      }
+
       ui.showError(error, "保存商品失败");
     } finally {
       ui.hideLoading();

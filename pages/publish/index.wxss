@@ -128,13 +128,73 @@
   font-weight: 600;
 }
 
-.spec-item {
+.spec-group,
+.sku-item {
   display: flex;
   flex-direction: column;
   gap: 16rpx;
   padding: 20rpx;
   border-radius: 8rpx;
   background: #eef2f6;
+}
+
+.spec-group-head,
+.spec-value-row,
+.sku-fields {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.spec-name-field,
+.spec-value-field {
+  flex: 1;
+}
+
+.spec-value-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.mini-button {
+  flex: none;
+  min-width: 112rpx;
+  height: 64rpx;
+  padding: 0 18rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+  color: #52606d;
+  font-size: 24rpx;
+  line-height: 64rpx;
+}
+
+.mini-button.danger {
+  color: #dc2626;
+}
+
+.mini-button::after {
+  border: 0;
+}
+
+.secondary-button.compact {
+  height: 68rpx;
+  font-size: 26rpx;
+  line-height: 68rpx;
+}
+
+.sku-name {
+  font-weight: 700;
+}
+
+.sku-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.sku-code-field {
+  flex: 1.4;
+  min-width: 0;
 }
 
 .secondary-button {

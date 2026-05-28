@@ -24,11 +24,11 @@
     </view>
     <view class="page-title">{{fruit.name}}</view>
     <view class="price-row">
-      <view class="price">￥{{minPrice}}</view>
-      <view class="price-note">起售参考价</view>
+      <view class="price">￥{{selectedSku ? selectedSku.priceText : minPrice}}</view>
+      <view class="price-note">{{selectedSku ? '当前选择' : '起售参考价'}}</view>
     </view>
-    <view class="selected-summary" wx:if="{{selectedSpec}}">
-      已选 {{selectedSpec.name}} · {{selectedSpec.weightText}}
+    <view class="selected-summary" wx:if="{{selectedSku}}">
+      已选 {{selectedSku.specText}} · 库存 {{selectedSku.stockText}}
     </view>
   </view>
 
@@ -39,26 +39,30 @@
   <view class="section">
     <view class="section-head">
       <view class="section-title">规格</view>
-      <button class="link-button" bindtap="copySpecInfo" wx:if="{{selectedSpec}}">复制规格</button>
+      <button class="link-button" bindtap="copySpecInfo" wx:if="{{selectedSku}}">复制规格</button>
     </view>
-    <view
-      class="spec-item {{selectedSpecIndex === index ? 'is-selected' : ''}} {{item.stockNumber <= 0 ? 'is-disabled' : ''}}"
-      wx:for="{{fruit.specs}}"
-      wx:key="index"
-      data-index="{{index}}"
-      bindtap="selectSpec"
-    >
-      <view>
-        <view class="spec-name">{{item.name}}</view>
-        <view class="muted">{{item.weightText}}</view>
-      </view>
-      <view class="spec-side">
-        <view class="spec-price">￥{{item.priceText}}</view>
-        <view class="muted" wx:if="{{item.stockNumber > 0}}">库存 {{item.stockNumber}}</view>
-        <view class="spec-stock is-out" wx:else>已售罄</view>
+    <view class="spec-group" wx:for="{{fruit.specGroups}}" wx:key="id">
+      <view class="spec-group-title">{{item.name}}</view>
+      <view class="spec-value-list">
+        <view
+          class="spec-value {{value.selected ? 'is-selected' : ''}} {{value.disabled ? 'is-disabled' : ''}}"
+          wx:for="{{item.values}}"
+          wx:for-item="value"
+          wx:key="id"
+          data-group-id="{{item.id}}"
+          data-value-id="{{value.id}}"
+          bindtap="selectSpecValue"
+        >
+          {{value.name}}
+        </view>
       </view>
     </view>
-    <view class="muted placeholder spec-empty" wx:if="{{fruit.specs.length === 0}}">暂未配置规格</view>
+    <view class="sku-summary" wx:if="{{selectedSku}}">
+      <view class="spec-price">￥{{selectedSku.priceText}}</view>
+      <view class="muted" wx:if="{{selectedSku.isAvailable}}">库存 {{selectedSku.stockText}}</view>
+      <view class="spec-stock is-out" wx:else>已售罄</view>
+    </view>
+    <view class="muted placeholder spec-empty" wx:if="{{fruit.skus.length === 0}}">暂未配置规格</view>
   </view>
 
   <view class="section" wx:if="{{relatedCategories.length > 0}}">
