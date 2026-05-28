@@ -60,7 +60,7 @@ exports.main = async (event) => {
     if (user) {
       await users.doc(user._id).update({
         data: {
-          role: "user",
+          role: "customer",
           shopId: "",
           updateTime: db.serverDate()
         }

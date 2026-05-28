@@ -114,6 +114,14 @@ function getShopLogo() {
   return shop && shop.logo ? shop.logo : getGlobalData().shopLogo || "";
 }
 
+function setPublicShopInfo(shop) {
+  const globalData = getGlobalData();
+  const nextShop = shop || {};
+
+  globalData.shopName = nextShop.name || globalData.shopName || getDefaultShopName();
+  globalData.shopLogo = nextShop.logo || globalData.shopLogo || "";
+}
+
 function setShop(shop) {
   const auth = getAuth();
   const nextAuth = {
@@ -155,6 +163,7 @@ module.exports = {
   getShopId,
   getShopName,
   getShopLogo,
+  setPublicShopInfo,
   setShop,
   markHomeFruitsChanged,
   clearHomeFruitsChanged,

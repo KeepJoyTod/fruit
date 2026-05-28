@@ -8,6 +8,8 @@ const db = cloud.database();
 const shops = db.collection("shops");
 const invites = db.collection("invites");
 
+const INVITE_ROLE = "manager";
+
 function createCode() {
   return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -54,6 +56,7 @@ exports.main = async (event) => {
         shopId,
         creatorOpenid: openid,
         code,
+        role: INVITE_ROLE,
         status: "active",
         expireTime,
         createTime: db.serverDate(),
@@ -64,6 +67,7 @@ exports.main = async (event) => {
     return {
       success: true,
       code,
+      role: INVITE_ROLE,
       path: `/pages/login/index?inviteCode=${code}`,
       expireTime
     };

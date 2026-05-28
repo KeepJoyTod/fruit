@@ -41,10 +41,18 @@ Page({
       fruitId: options.id || ""
     });
 
+    if (!this.requireShopLogin()) {
+      return;
+    }
+
     this.loadFruit();
   },
 
   onShow() {
+    if (!this.requireShopLogin()) {
+      return;
+    }
+
     this.loadCategories();
   },
 

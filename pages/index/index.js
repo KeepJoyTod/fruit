@@ -69,7 +69,7 @@ Page({
       }
 
       const shop = data.shop;
-      store.setShop(shop);
+      store.setPublicShopInfo(shop);
 
       this.setData({
         shopName: shop.name || store.getShopName(),

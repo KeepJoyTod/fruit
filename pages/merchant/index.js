@@ -13,6 +13,18 @@ const BASE_MANAGEMENT_ITEMS = [
 
 const CREATOR_MANAGEMENT_ITEM = { key: "owner", label: "团队管理", icon: "人", tone: "orange" };
 
+function getRoleText(role) {
+  if (role === "creator") {
+    return "店主";
+  }
+
+  if (role === "manager" || role === "owner") {
+    return "管理员";
+  }
+
+  return "";
+}
+
 Page({
   behaviors: [authRequired],
 
@@ -45,6 +57,7 @@ Page({
     const shop = store.getShop();
     const role = user && user.role ? user.role : "";
     const isCreator = role === "creator" || shop.creatorId === (user && user.openid);
+    const roleText = getRoleText(isCreator ? "creator" : role);
     const shopName = shop.name || store.getShopName();
 
     this.setData({
@@ -54,7 +67,7 @@ Page({
       businessStatus: shop.businessStatus || "open",
       announcement: shop.announcement || "",
       role,
-      roleText: role ? ` · ${role}` : "",
+      roleText: roleText ? ` · ${roleText}` : "",
       managementItems: isCreator ? BASE_MANAGEMENT_ITEMS.concat(CREATOR_MANAGEMENT_ITEM) : BASE_MANAGEMENT_ITEMS
     });
 

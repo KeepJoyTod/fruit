@@ -67,7 +67,7 @@ Page({
         return;
       }
 
-      ui.showError(error, "Owner 加载失败");
+      ui.showError(error, "团队加载失败");
     } finally {
       this.setData({ loading: false });
     }
@@ -120,7 +120,7 @@ Page({
     const path = this.data.invitePath || "/pages/login/index";
 
     return {
-      title: `${shop.name || "水果小店"} 邀请你成为店铺 Owner`,
+      title: `${shop.name || "水果小店"} 邀请你成为店铺管理员`,
       path,
       imageUrl: shop.logo || ""
     };
@@ -140,7 +140,7 @@ Page({
     }
 
     wx.showModal({
-      title: "移除 Owner",
+      title: "移除管理员",
       content: `确认移除"${name}"吗？`,
       confirmText: "移除",
       confirmColor: "#b91c1c",

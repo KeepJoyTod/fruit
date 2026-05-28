@@ -32,6 +32,10 @@ Page({
   },
 
   onShow() {
+    if (!this.requireShopLogin()) {
+      return;
+    }
+
     this.loadCategories();
   },
 
