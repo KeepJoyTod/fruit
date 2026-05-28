@@ -287,6 +287,7 @@ Page({
 
     wx.setClipboardData({
       data: `${fruit.name} ${spec.specText || spec.name || ""} ¥${spec.priceText} 库存${spec.stockText || spec.stockNumber}`
+      data: `${fruit.name} ${spec.name} ${spec.weightText} ¥${spec.priceText} 库存${spec.stockNumber}`
     });
   },
 

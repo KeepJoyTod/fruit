@@ -8,6 +8,13 @@ function getErrorMessage(data, fallbackMessage) {
   return fallbackMessage || "请求失败";
 }
 
+function createCloudError(data, fallbackMessage) {
+  const error = new Error(getErrorMessage(data, fallbackMessage));
+  error.code = data && data.code ? data.code : "";
+  error.data = data || {};
+  return error;
+}
+
 async function callCloud(name, data, options) {
   const requestOptions = options || {};
 
@@ -24,6 +31,7 @@ async function callCloud(name, data, options) {
 
     if (!result.success) {
       throw new Error(getErrorMessage(result, requestOptions.errorMessage));
+      throw createCloudError(result, requestOptions.errorMessage);
     }
 
     return result;

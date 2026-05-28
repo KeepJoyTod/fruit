@@ -68,6 +68,7 @@ exports.main = async (event) => {
         shopId,
         creatorOpenid: openid,
         code,
+        role: INVITE_ROLE,
         status: "active",
         expireTime,
         createTime: db.serverDate(),
@@ -78,6 +79,7 @@ exports.main = async (event) => {
     return {
       success: true,
       code,
+      role: INVITE_ROLE,
       path: `/pages/login/index?inviteCode=${code}`,
       expireTime
     };

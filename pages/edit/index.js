@@ -17,6 +17,12 @@ const {
   validateFruitForm
 } = require("../../forms/fruitForm");
 const { buildSkusFromGroups } = require("../../utils/fruit");
+  createEmptySpec,
+  createEmptyFruitForm,
+  buildEditFruitState,
+  toggleSelectedMap,
+  validateFruitForm
+} = require("../../forms/fruitForm");
 
 function getUploadShopId() {
   return store.getShopId() || "unknown";
@@ -44,10 +50,18 @@ Page({
       fruitId: options.id || ""
     });
 
+    if (!this.requireShopLogin()) {
+      return;
+    }
+
     this.loadFruit();
   },
 
   onShow() {
+    if (!this.requireShopLogin()) {
+      return;
+    }
+
     this.loadCategories();
   },
 
@@ -284,6 +298,9 @@ Page({
     if (groupIndex < 0) {
       return;
     }
+  toggleTag(event) {
+    const tag = event.currentTarget.dataset.tag;
+    const selectedTagMap = toggleSelectedMap(this.data.selectedTagMap, tag);
 
     specGroups.splice(groupIndex, 1);
     this.setData({
@@ -303,6 +320,9 @@ Page({
     if (groupIndex < 0) {
       return;
     }
+  toggleCategory(event) {
+    const categoryId = event.currentTarget.dataset.id;
+    const selectedCategoryMap = toggleSelectedMap(this.data.selectedCategoryMap, categoryId);
 
     specGroups[groupIndex].values.push(createEmptySpecValue());
 
@@ -398,6 +418,18 @@ Page({
         mainImage,
         detailImages
       }));
+      await fruitService.updateFruit({
+        fruitId: this.data.fruitId,
+        name: this.data.form.name,
+        mainImage,
+        detailImages,
+        origin: this.data.form.origin,
+        description: this.data.form.description,
+        categoryIds: this.data.form.categoryIds,
+        tags: this.data.form.tags,
+        status: this.data.form.status,
+        specs: this.data.form.specs
+      });
 
       ui.showSuccess("已保存");
       store.markHomeFruitsChanged();

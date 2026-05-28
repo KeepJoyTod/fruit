@@ -7,6 +7,7 @@ const {
   normalizeSpecGroups,
   normalizeSkus
 } = require("../utils/fruit");
+const { normalizeImageList, pickFruitMainImage } = require("../utils/fruit");
 
 const MAX_DETAIL_IMAGES = 9;
 
@@ -41,6 +42,7 @@ function createDefaultSpecGroups() {
 function createEmptyFruitForm() {
   const specGroups = createDefaultSpecGroups();
 
+function createEmptyFruitForm() {
   return {
     name: "",
     mainImage: "",
@@ -53,6 +55,7 @@ function createEmptyFruitForm() {
     specs: [createEmptySpec()],
     specGroups,
     skus: buildSkusFromGroups(specGroups, [])
+    specs: [createEmptySpec()]
   };
 }
 
@@ -87,6 +90,7 @@ function buildEditFruitState(fruit) {
       specs,
       specGroups: skuData.specGroups.length > 0 ? skuData.specGroups : createDefaultSpecGroups(),
       skus: skuData.skus.length > 0 ? skuData.skus : buildSkusFromGroups(skuData.specGroups, [])
+      specs
     }
   };
 }
@@ -124,6 +128,9 @@ function validateFruitForm(options) {
 
   if (skus.length === 0) {
     return "请至少填写一个有效SKU";
+  const validSpecs = (form.specs || []).filter((spec) => spec.name && Number(spec.price) > 0);
+  if (validSpecs.length === 0) {
+    return "请至少填写一个有效规格";
   }
 
   if (validateOptions.requireShop && !validateOptions.shopId) {
@@ -137,6 +144,7 @@ function buildFruitPayload(form, extra) {
   const specGroups = normalizeSpecGroups(form.specGroups);
 
   return Object.assign({
+  return Object.assign({}, extra || {}, {
     name: form.name,
     mainImage: form.mainImage,
     detailImages: form.detailImages,
@@ -149,6 +157,8 @@ function buildFruitPayload(form, extra) {
     specGroups,
     skus: normalizeSkus(form.skus, specGroups)
   }, extra || {});
+    specs: form.specs
+  });
 }
 
 module.exports = {

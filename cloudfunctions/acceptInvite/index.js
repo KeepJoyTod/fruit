@@ -57,6 +57,10 @@ function pickShop(shop) {
   };
 }
 
+function normalizeInviteRole(role) {
+  return role === "creator" ? "creator" : "manager";
+}
+
 exports.main = async (event) => {
   const wxContext = cloud.getWXContext();
   const openid = wxContext.OPENID;
@@ -114,6 +118,10 @@ exports.main = async (event) => {
     const userData = {
       openid,
       role: shop.creatorId === openid ? "creator" : "owner",
+    const role = shop.creatorId === openid ? "creator" : normalizeInviteRole(invite.role);
+    const userData = {
+      openid,
+      role,
       shopId: invite.shopId,
       updateTime: db.serverDate()
     };
