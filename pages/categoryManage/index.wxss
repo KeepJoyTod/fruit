@@ -1,0 +1,146 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  padding: 24rpx;
+  margin-top: 32rpx;
+}
+
+.form-heading {
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.field,
+.textarea {
+  width: 100%;
+  padding: 24rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+}
+
+.field {
+  height: 88rpx;
+}
+
+.textarea {
+  min-height: 160rpx;
+}
+
+.form-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16rpx;
+  align-items: center;
+}
+
+.save-button {
+  margin: 0;
+}
+
+.cancel-button {
+  width: 144rpx;
+  height: 80rpx;
+  margin: 0;
+  border-radius: 8rpx;
+  background: #eef2f6;
+  color: #52616b;
+  font-size: 28rpx;
+  line-height: 80rpx;
+}
+
+.cancel-button::after {
+  border: 0;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 36rpx;
+}
+
+.section-heading-title {
+  font-size: 32rpx;
+  font-weight: 800;
+}
+
+.section-chip {
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 24rpx;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 24rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+}
+
+.category-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.category-name {
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.category-desc {
+  margin-top: 10rpx;
+  color: #52616b;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.category-sort {
+  margin-top: 12rpx;
+  color: #9aa5b1;
+  font-size: 22rpx;
+}
+
+.category-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.action-button {
+  width: 104rpx;
+  height: 56rpx;
+  margin: 0;
+  border-radius: 8rpx;
+  background: #eef2f6;
+  color: #1f2933;
+  font-size: 24rpx;
+  line-height: 56rpx;
+}
+
+.action-button.danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.action-button::after {
+  border: 0;
+}
+
+.empty,
+.placeholder {
+  padding: 80rpx 0;
+  color: #7b8794;
+  text-align: center;
+}

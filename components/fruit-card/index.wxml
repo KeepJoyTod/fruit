@@ -1,0 +1,19 @@
+<view class="fruit-card" bindtap="handleTap">
+  <view class="fruit-media">
+    <image class="fruit-image" src="{{fruit.mainImage}}" mode="aspectFill" wx:if="{{fruit.mainImage}}" />
+    <view class="fruit-image placeholder" wx:else>暂无图片</view>
+    <view class="fruit-price-badge">{{minPrice}} 起</view>
+  </view>
+  <view class="fruit-info">
+    <view class="fruit-name">{{fruit.name}}</view>
+    <view class="fruit-shop" wx:if="{{showShopName && fruit.shopName}}">{{fruit.shopName}}</view>
+    <view class="fruit-desc" wx:if="{{fruit.origin}}">产地 {{fruit.origin}}</view>
+    <view class="fruit-tags" wx:if="{{fruit.tags && fruit.tags.length > 0}}">
+      <view class="fruit-tag" wx:for="{{fruit.tags}}" wx:key="*this">{{item}}</view>
+    </view>
+    <view class="fruit-foot">
+      <view class="fruit-meta">现摘现发</view>
+      <view class="fruit-cta">查看详情</view>
+    </view>
+  </view>
+</view>

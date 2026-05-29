@@ -1,0 +1,9 @@
+<view class="page login-page">
+  <view class="page-title">{{isInviteMode ? '加入店铺' : '商家登录'}}</view>
+  <view class="muted login-tip">
+    {{isInviteMode ? '使用店主提供的邀请码绑定当前微信。' : '仅授权商家可进入后台，顾客无需登录即可浏览商品。'}}
+  </view>
+  <button class="primary-button login-button" loading="{{loading}}" disabled="{{loading}}" bindtap="handleLogin">
+    {{isInviteMode ? '微信加入店铺' : '微信商家登录'}}
+  </button>
+</view>

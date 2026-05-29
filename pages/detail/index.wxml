@@ -1,0 +1,116 @@
+<view class="page detail-page" wx:if="{{fruit}}">
+  <view class="gallery-card">
+    <image class="main-image" src="{{currentImage}}" mode="aspectFill" bindtap="previewImage" wx:if="{{currentImage}}" />
+    <view class="main-image image-empty" wx:else>暂无图片</view>
+    <view class="image-count" wx:if="{{galleryImages.length > 1}}">{{currentImageIndex + 1}} / {{galleryImages.length}}</view>
+
+    <scroll-view class="thumb-list" scroll-x wx:if="{{galleryImages.length > 1}}">
+      <view
+        class="thumb-item {{currentImageIndex === index ? 'is-active' : ''}}"
+        wx:for="{{galleryImages}}"
+        wx:key="*this"
+        data-index="{{index}}"
+        bindtap="changePreview"
+      >
+        <image class="thumb-image" src="{{item}}" mode="aspectFill" />
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="detail-header card">
+    <view class="detail-badge-row">
+      <view class="detail-badge">Fresh Choice</view>
+      <view class="detail-shop" wx:if="{{fruit.shopName}}">{{fruit.shopName}}</view>
+    </view>
+    <view class="page-title">{{fruit.name}}</view>
+    <view class="price-row">
+      <view class="price">{{selectedSku ? selectedSku.priceText : minPrice}}</view>
+      <view class="price-note">{{selectedSku ? '当前选择' : '起售参考价'}}</view>
+    </view>
+    <view class="selected-summary" wx:if="{{selectedSku}}">
+      已选 {{selectedSku.specText}} · 库存 {{selectedSku.stockText}}
+    </view>
+  </view>
+
+  <view class="tag-list" wx:if="{{fruit.tags.length > 0}}">
+    <view class="tag" wx:for="{{fruit.tags}}" wx:key="*this">{{item}}</view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">规格</view>
+      <button class="link-button" bindtap="copySpecInfo" wx:if="{{selectedSku}}">复制规格</button>
+    </view>
+    <view class="spec-group" wx:for="{{fruit.specGroups}}" wx:key="id">
+      <view class="spec-group-title">{{item.name}}</view>
+      <view class="spec-value-list">
+        <view
+          class="spec-value {{value.selected ? 'is-selected' : ''}} {{value.disabled ? 'is-disabled' : ''}}"
+          wx:for="{{item.values}}"
+          wx:for-item="value"
+          wx:key="id"
+          data-group-id="{{item.id}}"
+          data-value-id="{{value.id}}"
+          bindtap="selectSpecValue"
+        >
+          {{value.name}}
+        </view>
+      </view>
+    </view>
+    <view class="sku-summary" wx:if="{{selectedSku}}">
+      <view class="spec-price">{{selectedSku.priceText}}</view>
+      <view class="muted" wx:if="{{selectedSku.isAvailable}}">库存 {{selectedSku.stockText}}</view>
+      <view class="spec-stock is-out" wx:else>已售罄</view>
+    </view>
+    <view class="muted placeholder spec-empty" wx:if="{{fruit.skus.length === 0}}">暂未配置规格</view>
+  </view>
+
+  <view class="section" wx:if="{{relatedCategories.length > 0}}">
+    <view class="section-title">查看同类</view>
+    <view class="category-list">
+      <view class="category-pill" wx:for="{{relatedCategories}}" wx:key="_id" data-id="{{item._id}}" bindtap="goCategory">
+        <view class="category-name">{{item.name}}</view>
+        <view class="category-sub" wx:if="{{item.subTitle}}">{{item.subTitle}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{fruit.origin}}">
+    <view class="section-title">产地</view>
+    <view class="content-text">{{fruit.origin}}</view>
+  </view>
+
+  <view class="section" wx:if="{{fruit.description}}">
+    <view class="section-title">商品描述</view>
+    <view class="content-text">{{fruit.description}}</view>
+  </view>
+
+  <view class="section" wx:if="{{detailImageItems.length > 0}}">
+    <view class="section-title">详情图</view>
+    <view class="detail-image-grid">
+      <image
+        class="detail-image"
+        wx:for="{{detailImageItems}}"
+        wx:key="key"
+        src="{{item.url}}"
+        mode="aspectFill"
+        data-index="{{item.galleryIndex}}"
+        bindtap="previewImage"
+      />
+    </view>
+  </view>
+
+  <view class="action-bar">
+    <button class="secondary-button" bindtap="copyName">复制名称</button>
+    <button class="secondary-button" bindtap="goPrimaryCategory" wx:if="{{relatedCategories.length > 0}}">查看同类</button>
+    <button class="primary-button share-button" open-type="share">分享商品</button>
+  </view>
+</view>
+
+<view class="page" wx:elif="{{loading}}">
+  <view class="muted placeholder">加载中...</view>
+</view>
+
+<view class="page" wx:else>
+  <view class="empty">商品不存在或加载失败</view>
+</view>

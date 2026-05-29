@@ -1,0 +1,108 @@
+<view class="page merchant-page">
+  <view class="merchant-profile">
+    <view class="profile-row">
+      <view class="profile-main">
+        <image class="profile-logo" src="{{shopLogo}}" mode="aspectFill" wx:if="{{shopLogo}}" />
+        <view class="profile-logo-placeholder" wx:else>{{shopInitial}}</view>
+        <view class="profile-copy">
+          <view class="profile-name">{{shopName}}</view>
+          <view class="profile-status {{businessStatus === 'closed' ? 'closed' : ''}}">
+            {{businessStatus === 'closed' ? '休息中' : '在线营业'}}
+          </view>
+        </view>
+      </view>
+      <button class="edit-profile" bindtap="goShopSettings">编辑资料</button>
+    </view>
+
+    <view class="stats-panel">
+      <view class="stat-cell">
+        <view class="stat-value">{{stats.total}}</view>
+        <view class="stat-label">全部商品</view>
+        <view class="stat-sub">当前店铺</view>
+      </view>
+      <view class="stat-cell">
+        <view class="stat-value">{{stats.onSale}}</view>
+        <view class="stat-label">上架中</view>
+        <view class="stat-sub">用户可见</view>
+      </view>
+      <view class="stat-cell">
+        <view class="stat-value">{{stats.offSale}}</view>
+        <view class="stat-label">已下架</view>
+        <view class="stat-sub">暂不展示</view>
+      </view>
+      <view class="stat-cell">
+        <view class="stat-value">{{stats.lowStock}}</view>
+        <view class="stat-label">低库存</view>
+        <view class="stat-sub">及时补货</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="merchant-section">
+    <view class="section-title-row">
+      <view class="section-title">管理功能</view>
+    </view>
+    <view class="management-grid">
+      <view
+        class="management-item"
+        wx:for="{{managementItems}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        bindtap="handleManagementTap"
+      >
+        <view class="management-icon {{item.tone}}">{{item.icon}}</view>
+        <view class="management-label">{{item.label}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="notice-card" bindtap="goAnnouncementManage">
+    <view class="notice-mark">
+      <view class="notice-mark-main">公告</view>
+      <view class="notice-mark-sub">{{announcement ? '已发布' : '待发布'}}</view>
+    </view>
+    <view class="notice-content">
+      <view class="notice-title">店铺公告</view>
+      <view class="notice-text">{{announcement || '暂无公告，点击编辑并发布店铺公告。'}}</view>
+    </view>
+    <button class="notice-link" bindtap="goAnnouncementManage">编辑</button>
+  </view>
+
+  <view class="merchant-section product-section">
+    <view class="section-title-row">
+      <view>
+        <view class="section-title">商品管理</view>
+        <view class="section-subtitle">最新上新和上下架状态</view>
+      </view>
+      <button class="section-action" bindtap="goPublish">新增</button>
+    </view>
+
+    <view class="filter-tabs">
+      <view class="filter-tab {{filter === 'all' ? 'active' : ''}}" data-filter="all" bindtap="switchFilter">全部</view>
+      <view class="filter-tab {{filter === 'on_sale' ? 'active' : ''}}" data-filter="on_sale" bindtap="switchFilter">上架中</view>
+      <view class="filter-tab {{filter === 'off_sale' ? 'active' : ''}}" data-filter="off_sale" bindtap="switchFilter">已下架</view>
+      <view class="filter-tab {{filter === 'low_stock' ? 'active' : ''}}" data-filter="low_stock" bindtap="switchFilter">低库存</view>
+    </view>
+
+    <view class="fruit-list" wx:if="{{filteredFruits.length > 0}}">
+      <view class="fruit-item" wx:for="{{filteredFruits}}" wx:key="_id">
+        <image class="fruit-image" src="{{item.mainImage}}" mode="aspectFill" wx:if="{{item.mainImage}}" />
+        <view class="fruit-image fruit-image-empty" wx:else>无图</view>
+        <view class="fruit-content">
+          <view class="fruit-row">
+            <view class="fruit-name">{{item.name}}</view>
+            <view class="status-pill {{item.statusClass}}">{{item.statusText}}</view>
+          </view>
+          <view class="fruit-meta">{{item.specCount}} 个规格 · {{item.minPrice}} · 库存 {{item.stockSummary}}</view>
+          <view class="fruit-actions">
+            <button class="action-button" data-id="{{item._id}}" bindtap="goEdit">编辑</button>
+            <button class="action-button" data-id="{{item._id}}" data-status="{{item.nextStatus}}" bindtap="toggleStatus">{{item.statusActionText}}</button>
+            <button class="action-button danger" data-id="{{item._id}}" data-name="{{item.name}}" bindtap="confirmDelete">删除</button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty" wx:else>暂无匹配商品</view>
+  </view>
+</view>

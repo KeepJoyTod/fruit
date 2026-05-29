@@ -1,0 +1,72 @@
+.form {
+  padding: 24rpx;
+  border-radius: 12rpx;
+  background: #ffffff;
+}
+
+label {
+  display: block;
+  margin-top: 22rpx;
+  color: #455147;
+  font-size: 26rpx;
+}
+
+label:first-child {
+  margin-top: 0;
+}
+
+input,
+textarea {
+  width: 100%;
+  margin-top: 10rpx;
+  padding: 0 18rpx;
+  box-sizing: border-box;
+  border: 1rpx solid #d8e2da;
+  border-radius: 10rpx;
+  background: #fbfcfb;
+  font-size: 28rpx;
+}
+
+input {
+  height: 82rpx;
+}
+
+textarea {
+  min-height: 180rpx;
+  padding-top: 18rpx;
+}
+
+.image-uploader {
+  margin-top: 12rpx;
+}
+
+.image-uploader image,
+.image-empty {
+  width: 100%;
+  height: 320rpx;
+  border-radius: 10rpx;
+  background: #dbe6dc;
+}
+
+.image-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #637166;
+  font-size: 28rpx;
+}
+
+.image-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+  margin-top: 14rpx;
+}
+
+.image-actions button {
+  margin: 0;
+}
+
+.submit {
+  margin-top: 24rpx;
+}

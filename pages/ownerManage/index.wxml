@@ -1,0 +1,44 @@
+<view class="page owner-page">
+  <view class="page-title">团队管理</view>
+  <view class="muted tip">仅店主可以邀请或移除管理员。管理员可管理商品、分类、公告和店铺信息。</view>
+
+  <view class="invite-card">
+    <view class="card-title">邀请管理员</view>
+    <view class="muted card-copy">生成邀请后，可直接分享给微信好友。对方打开后登录，即可加入店铺成为管理员。</view>
+    <button class="primary-button invite-button" loading="{{creating}}" disabled="{{creating || !isCreator}}" bindtap="createInvite">
+      生成邀请链接
+    </button>
+    <view class="invite-result" wx:if="{{invitePath}}">
+      <view class="invite-path">{{invitePath}}</view>
+      <button class="secondary-button copy-button" bindtap="copyInvite">复制</button>
+      <button class="secondary-button copy-button" open-type="share">分享邀请</button>
+    </view>
+    <view class="muted creator-tip" wx:if="{{!isCreator}}">当前账号不是店主，不能生成邀请或移除管理员。请联系店主处理。</view>
+  </view>
+
+  <view class="owner-list" wx:if="{{owners.length > 0}}">
+    <view class="owner-item" wx:for="{{owners}}" wx:key="openid">
+      <view class="owner-avatar">{{item.initial}}</view>
+      <view class="owner-content">
+        <view class="owner-name">{{item.displayName}}</view>
+        <view class="muted owner-openid">{{item.openid}}</view>
+      </view>
+      <view class="owner-side">
+        <view class="role-pill {{item.role}}">{{item.roleText}}</view>
+        <button
+          class="remove-button"
+          wx:if="{{isCreator && item.removable}}"
+          data-openid="{{item.openid}}"
+          data-name="{{item.displayName}}"
+          data-removable="{{item.removable}}"
+          bindtap="confirmRemove"
+        >
+          移除
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:elif="{{!loading}}">暂无团队成员</view>
+  <view class="muted placeholder" wx:else>加载中...</view>
+</view>

@@ -1,0 +1,27 @@
+<view class="page shop-settings-page">
+  <view class="page-title">店铺设置</view>
+
+  <view class="form">
+    <view class="section">
+      <view class="section-title">店铺 Logo</view>
+      <view class="logo-picker" bindtap="chooseLogo">
+        <image class="logo-image" src="{{form.logoTemp || form.logo}}" mode="aspectFill" wx:if="{{form.logoTemp || form.logo}}" />
+        <view class="logo-placeholder" wx:else>选择 Logo</view>
+      </view>
+    </view>
+
+    <input class="field" placeholder="店铺名称" value="{{form.name}}" bindinput="onNameInput" />
+    <input class="field" placeholder="联系电话（可选）" value="{{form.contactPhone}}" bindinput="onContactPhoneInput" />
+    <input class="field" placeholder="店铺地址（可选）" value="{{form.address}}" bindinput="onAddressInput" />
+
+    <view class="section">
+      <view class="section-title">营业状态</view>
+      <view class="status-switch">
+        <view class="status-option {{form.businessStatus === 'open' ? 'active' : ''}}" data-status="open" bindtap="switchBusinessStatus">营业中</view>
+        <view class="status-option {{form.businessStatus === 'closed' ? 'active' : ''}}" data-status="closed" bindtap="switchBusinessStatus">休息中</view>
+      </view>
+    </view>
+
+    <button class="primary-button" loading="{{saving}}" disabled="{{saving}}" bindtap="submit">保存店铺信息</button>
+  </view>
+</view>

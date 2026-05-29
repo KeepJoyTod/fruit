@@ -1,0 +1,155 @@
+.owner-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.tip {
+  line-height: 1.6;
+}
+
+.invite-card {
+  padding: 28rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+}
+
+.card-title {
+  color: #243126;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.card-copy,
+.creator-tip {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.invite-button {
+  margin-top: 24rpx;
+}
+
+.invite-result {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+  align-items: center;
+  margin-top: 20rpx;
+}
+
+.invite-path {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 18rpx;
+  border-radius: 8rpx;
+  background: #f6f7f9;
+  color: #52616b;
+  font-size: 23rpx;
+  word-break: break-all;
+}
+
+.copy-button {
+  height: 72rpx;
+  margin: 0;
+  border-radius: 8rpx;
+  background: #eef2f6;
+  color: #0f766e;
+  font-size: 26rpx;
+  line-height: 72rpx;
+}
+
+.copy-button::after {
+  border: 0;
+}
+
+.owner-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.owner-item {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 22rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+}
+
+.owner-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #0f766e;
+  font-weight: 800;
+}
+
+.owner-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.owner-name {
+  color: #243126;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.owner-openid {
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owner-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12rpx;
+}
+
+.role-pill {
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: #eef2f6;
+  color: #52616b;
+  font-size: 22rpx;
+}
+
+.role-pill.creator {
+  background: #fff7ed;
+  color: #d46b1f;
+}
+
+.remove-button {
+  width: 96rpx;
+  height: 52rpx;
+  padding: 0;
+  margin: 0;
+  border-radius: 8rpx;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 23rpx;
+  line-height: 52rpx;
+}
+
+.remove-button::after {
+  border: 0;
+}
+
+.empty,
+.placeholder {
+  padding: 80rpx 0;
+  color: #7b8794;
+  text-align: center;
+}

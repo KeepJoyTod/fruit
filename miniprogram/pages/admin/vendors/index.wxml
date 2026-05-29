@@ -1,0 +1,30 @@
+<view class="page admin-page">
+  <view class="header">
+    <view>
+      <text class="title">摊主管理</text>
+      <text class="subtitle">审核和停用摊主账号关联的摊位。</text>
+    </view>
+    <button class="ghost-button refresh" bindtap="loadVendors">刷新</button>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+
+  <view class="vendor-list">
+    <view class="vendor-item" wx:for="{{vendors}}" wx:key="id">
+      <view class="vendor-main">
+        <text class="stall">{{item.stallName}}</text>
+        <text class="meta">账号：{{item.username}}</text>
+        <text class="meta">{{item.address}}</text>
+        <text class="meta">{{item.phone}}</text>
+      </view>
+      <view class="vendor-side">
+        <text class="status {{item.enabled ? 'enabled' : 'disabled'}}">{{item.enabled ? '启用' : '停用'}}</text>
+        <button size="mini" data-id="{{item.id}}" data-enabled="{{item.enabled}}" bindtap="toggleEnabled">{{item.enabled ? '停用' : '启用'}}</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{!loading && vendors.length === 0}}">
+    <text>暂无摊主</text>
+  </view>
+</view>

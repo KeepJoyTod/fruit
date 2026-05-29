@@ -1,0 +1,42 @@
+<view class="page search-page">
+  <view class="search-hero glass-panel">
+    <view class="search-title">今天想吃什么水果？</view>
+    <view class="search-copy">输入水果名称，快速找到正在售卖的当季水果。</view>
+    <view class="search-bar">
+      <input
+        class="search-input"
+        placeholder="搜索水果名称"
+        value="{{keyword}}"
+        bindinput="onKeywordInput"
+        bindconfirm="onKeywordConfirm"
+        confirm-type="search"
+      />
+      <button class="search-button" bindtap="onKeywordConfirm">搜索</button>
+    </view>
+    <view class="preset-row">
+      <view class="preset-chip" data-keyword="榴莲" bindtap="usePresetKeyword">榴莲</view>
+      <view class="preset-chip" data-keyword="蓝莓" bindtap="usePresetKeyword">蓝莓</view>
+      <view class="preset-chip" data-keyword="西瓜" bindtap="usePresetKeyword">西瓜</view>
+    </view>
+  </view>
+
+  <view class="search-meta glass-panel" wx:if="{{keyword}}">
+    <view class="muted">正在查找“{{keyword}}”相关水果</view>
+    <button class="link-button" bindtap="clearKeyword">清空</button>
+  </view>
+
+  <view class="muted placeholder" wx:if="{{loading}}">搜索中...</view>
+
+  <view class="fruit-list" wx:elif="{{results.length > 0}}">
+    <fruit-card
+      wx:for="{{results}}"
+      wx:key="_id"
+      fruit="{{item}}"
+      show-shop-name="{{true}}"
+      bind:tap="goDetail"
+    />
+  </view>
+
+  <view class="empty" wx:elif="{{hasSearched}}">没有找到匹配的水果</view>
+  <view class="muted placeholder" wx:else>试试搜索榴莲、西瓜、蓝莓等热门水果</view>
+</view>

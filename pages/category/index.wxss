@@ -1,0 +1,144 @@
+.category-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.category-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24rpx;
+  padding: 30rpx;
+}
+
+.hero-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-label {
+  display: inline-flex;
+  align-items: center;
+  height: 48rpx;
+  padding: 0 20rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 138, 61, 0.14);
+  color: #d46b1f;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.category-subtitle {
+  margin-top: 12rpx;
+  color: #2f9e44;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.category-desc {
+  margin-top: 16rpx;
+  line-height: 1.6;
+}
+
+.hero-count {
+  margin-top: 18rpx;
+  color: #8d9c8b;
+  font-size: 24rpx;
+}
+
+.ghost-button {
+  flex: none;
+  height: 72rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  background: rgba(47, 158, 68, 0.12);
+  color: #2f9e44;
+  font-size: 26rpx;
+  line-height: 72rpx;
+}
+
+.ghost-button::after {
+  border: 0;
+}
+
+.toolbar {
+  padding: 24rpx;
+}
+
+.toolbar-meta {
+  color: #7c8b7a;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.toolbar-meta-second {
+  margin-top: 24rpx;
+}
+
+.tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.tag-chip {
+  min-width: 112rpx;
+  padding: 16rpx 24rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.88);
+  color: #5f6f5f;
+  font-size: 24rpx;
+  text-align: center;
+}
+
+.tag-chip.is-active {
+  background: linear-gradient(135deg, #ff8a3d 0%, #ffad55 100%);
+  color: #ffffff;
+  box-shadow: 0 16rpx 32rpx rgba(255, 138, 61, 0.2);
+}
+
+.sort-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.sort-chip {
+  min-width: 132rpx;
+  padding: 18rpx 24rpx;
+  border-radius: 999rpx;
+  background: #f5f8f2;
+  color: #5f6f5f;
+  font-size: 24rpx;
+  text-align: center;
+}
+
+.sort-chip.is-active {
+  background: linear-gradient(135deg, #2f9e44 0%, #56b75e 100%);
+  color: #ffffff;
+  box-shadow: 0 16rpx 32rpx rgba(47, 158, 68, 0.18);
+}
+
+.fruit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.empty {
+  padding: 96rpx 0;
+  color: #7c8b7a;
+  text-align: center;
+}
+
+.placeholder {
+  margin-top: 32rpx;
+}
+
+.empty-state {
+  padding: 120rpx 0;
+  text-align: center;
+}

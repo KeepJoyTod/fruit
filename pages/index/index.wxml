@@ -1,0 +1,97 @@
+<view class="page home-page">
+  <view class="hero-card glass-panel">
+    <view class="hero-top">
+      <image class="shop-logo" src="{{shopLogo}}" mode="aspectFill" wx:if="{{shopLogo}}" />
+      <view class="shop-logo-placeholder" wx:else>{{shopInitial}}</view>
+      <view class="hero-heading">
+        <view class="hero-badge {{businessStatus === 'closed' ? 'closed' : ''}}">
+          {{businessStatus === 'closed' ? '休息中' : '营业中'}}
+        </view>
+        <view class="page-title hero-title">{{shopName}}</view>
+      </view>
+    </view>
+
+    <view class="hero-subtitle">把当季水果装进今天的好心情，现挑现看，更新更快。</view>
+
+    <view class="shop-meta" wx:if="{{contactPhone || address}}">
+      <view wx:if="{{contactPhone}}">电话：{{contactPhone}}</view>
+      <view wx:if="{{address}}">地址：{{address}}</view>
+    </view>
+
+    <view class="hero-stats">
+      <view class="hero-stat">
+        <view class="hero-stat-value">{{categories.length}}</view>
+        <view class="hero-stat-label">热门分类</view>
+      </view>
+      <view class="hero-stat">
+        <view class="hero-stat-value">{{fruits.length}}</view>
+        <view class="hero-stat-label">在售商品</view>
+      </view>
+    </view>
+    <view class="hero-actions">
+      <button class="primary-button hero-primary" bindtap="goSearch">搜索水果</button>
+      <button class="icon-button hero-secondary" bindtap="goLogin">商家入口</button>
+    </view>
+  </view>
+
+  <view class="announcement-section" wx:if="{{announcement}}">
+    <view class="announcement-icon">告</view>
+    <view class="announcement-content">
+      <view class="announcement-title">店铺公告</view>
+      <view class="announcement-text">{{announcement}}</view>
+    </view>
+  </view>
+
+  <view class="home-section">
+    <view class="section-heading">
+      <view>
+        <view class="section-heading-title">水果分类</view>
+        <view class="section-heading-copy">按品类快速查看在售水果</view>
+      </view>
+    </view>
+    <scroll-view class="category-scroll" scroll-x wx:if="{{categories.length > 0}}">
+      <view class="category-pill" wx:for="{{categories}}" wx:key="_id" bindtap="goCategory" data-id="{{item._id}}">
+        <view class="category-pill-name">{{item.name}}</view>
+        <view class="category-pill-tip">立即查看</view>
+      </view>
+    </scroll-view>
+    <view class="category-placeholder muted" wx:else>暂无分类</view>
+  </view>
+
+  <view class="home-section">
+    <view class="section-heading">
+      <view>
+        <view class="section-heading-title">今日推荐</view>
+        <view class="section-heading-copy">刚刚上新的新鲜水果</view>
+      </view>
+      <view class="section-chip" wx:if="{{fruits.length > 0}}">{{fruits.length}} 款可选</view>
+    </view>
+
+    <scroll-view class="tag-scroll" scroll-x>
+      <view class="tag-chip {{selectedTag === '' ? 'is-active' : ''}}" data-tag="" bindtap="selectTag">全部</view>
+      <view
+        class="tag-chip {{selectedTag === item ? 'is-active' : ''}}"
+        wx:for="{{tags}}"
+        wx:key="*this"
+        data-tag="{{item}}"
+        bindtap="selectTag"
+      >
+        {{item}}
+      </view>
+    </scroll-view>
+
+    <block wx:if="{{!loading && fruits.length > 0}}">
+      <view class="fruit-list">
+        <fruit-card
+          wx:for="{{fruits}}"
+          wx:key="_id"
+          fruit="{{item}}"
+          show-shop-name="{{true}}"
+          bind:tap="goDetail"
+        />
+      </view>
+    </block>
+    <view class="empty" wx:elif="{{!loading}}">暂无商品</view>
+    <view class="muted placeholder" wx:else>加载中...</view>
+  </view>
+</view>

@@ -1,0 +1,111 @@
+<view class="page">
+  <view class="page-title">编辑商品</view>
+  <view class="form" wx:if="{{formReady}}">
+    <input class="field" placeholder="商品名称" value="{{form.name}}" bindinput="onNameInput" />
+
+    <view class="section">
+      <view class="section-title">主图</view>
+      <view class="image-picker" bindtap="chooseMainImage">
+        <image class="preview-image" src="{{displayImage}}" mode="aspectFill" wx:if="{{displayImage}}" />
+        <view class="image-placeholder" wx:else>选择主图</view>
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">详情图</view>
+      <view class="detail-image-list">
+        <view class="detail-image-item" wx:for="{{detailImages}}" wx:key="*this">
+          <image class="detail-preview-image" src="{{item}}" mode="aspectFill" />
+          <button class="remove-image" data-index="{{index}}" bindtap="removeExistingDetailImage">×</button>
+        </view>
+        <view class="detail-image-item" wx:for="{{detailImageTemps}}" wx:key="*this">
+          <image class="detail-preview-image" src="{{item}}" mode="aspectFill" />
+          <button class="remove-image" data-index="{{index}}" bindtap="removeNewDetailImage">×</button>
+        </view>
+        <view class="detail-image-add" bindtap="chooseDetailImages" wx:if="{{detailImages.length + detailImageTemps.length < 9}}">添加图片</view>
+      </view>
+      <view class="muted image-tip">可上传最多9张，用于商品详情页展示</view>
+    </view>
+
+    <input class="field" placeholder="产地（可选）" value="{{form.origin}}" bindinput="onOriginInput" />
+    <textarea class="textarea" placeholder="商品描述" value="{{form.description}}" bindinput="onDescriptionInput" />
+
+    <view class="section" wx:if="{{categories.length > 0}}">
+      <view class="section-title">分类</view>
+      <view class="tag-list">
+        <view
+          class="tag {{selectedCategoryMap[item._id] ? 'active' : ''}}"
+          wx:for="{{categories}}"
+          wx:key="_id"
+          data-id="{{item._id}}"
+          bindtap="toggleCategory"
+        >
+          {{item.name}}
+        </view>
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">标签</view>
+      <view class="tag-list">
+        <view
+          class="tag {{selectedTagMap[item] ? 'active' : ''}}"
+          wx:for="{{tags}}"
+          wx:key="*this"
+          data-tag="{{item}}"
+          bindtap="toggleTag"
+        >
+          {{item}}
+        </view>
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">规格</view>
+      <view class="spec-group" wx:for="{{form.specGroups}}" wx:for-item="group" wx:key="id">
+        <view class="spec-group-head">
+          <input class="field spec-name-field" placeholder="规格项，如大小、重量" value="{{group.name}}" data-group-id="{{group.id}}" bindinput="onSpecGroupNameInput" />
+          <button class="mini-button danger" data-group-id="{{group.id}}" bindtap="removeSpecGroup" wx:if="{{form.specGroups.length > 1}}">删除</button>
+        </view>
+        <view class="spec-value-list">
+          <view class="spec-value-row" wx:for="{{group.values}}" wx:for-item="value" wx:key="id">
+            <input
+              class="field spec-value-field"
+              placeholder="规格值，如大果"
+              value="{{value.name}}"
+              data-group-id="{{group.id}}"
+              data-value-id="{{value.id}}"
+              bindinput="onSpecValueInput"
+            />
+            <button
+              class="mini-button danger"
+              data-group-id="{{group.id}}"
+              data-value-id="{{value.id}}"
+              bindtap="removeSpecValue"
+              wx:if="{{group.values.length > 1}}"
+            >删除</button>
+          </view>
+        </view>
+        <button class="secondary-button compact" data-group-id="{{group.id}}" bindtap="addSpecValue">添加规格值</button>
+      </view>
+      <button class="secondary-button" bindtap="addSpecGroup">添加规格项</button>
+    </view>
+
+    <view class="section">
+      <view class="section-title">SKU 价格库存</view>
+      <view class="sku-item" wx:for="{{form.skus}}" wx:key="id">
+        <view class="sku-name">{{item.specText}}</view>
+        <view class="sku-fields">
+          <input class="field sku-field" placeholder="价格，如 1元/斤" value="{{item.price}}" data-index="{{index}}" data-field="price" bindinput="onSkuInput" />
+          <input class="field sku-field" placeholder="库存，如 20 / 充足 / 少量" value="{{item.stock}}" data-index="{{index}}" data-field="stock" bindinput="onSkuInput" />
+          <input class="field sku-code-field" placeholder="编码（可选）" value="{{item.skuCode}}" data-index="{{index}}" data-field="skuCode" bindinput="onSkuInput" />
+        </view>
+      </view>
+      <view class="muted image-tip" wx:if="{{form.skus.length === 0}}">填写规格项和规格值后会自动生成 SKU</view>
+    </view>
+
+    <button class="primary-button" loading="{{saving}}" disabled="{{saving}}" bindtap="submit">保存修改</button>
+  </view>
+
+  <view class="muted placeholder" wx:else>加载中...</view>
+</view>

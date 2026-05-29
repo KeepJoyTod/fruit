@@ -1,0 +1,31 @@
+<view class="page">
+  <view class="form">
+    <label>水果名称</label>
+    <input value="{{form.name}}" data-field="name" bindinput="onInput" placeholder="例如：芒果" />
+
+    <label>价格</label>
+    <input value="{{form.price}}" data-field="price" bindinput="onInput" type="digit" placeholder="例如：8.8" />
+
+    <label>单位</label>
+    <input value="{{form.unit}}" data-field="unit" bindinput="onInput" placeholder="例如：斤" />
+
+    <label>标签</label>
+    <input value="{{form.tagsText}}" data-field="tagsText" bindinput="onInput" placeholder="用逗号分隔，例如：新鲜到货,可试吃" />
+
+    <label>水果图片</label>
+    <view class="image-uploader">
+      <image wx:if="{{form.imageUrl}}" src="{{form.imageUrl}}" mode="aspectFill" />
+      <view wx:else class="image-empty">未添加图片</view>
+      <view class="image-actions">
+        <button class="ghost-button" loading="{{uploading}}" bindtap="chooseImage">选择图片</button>
+        <button wx:if="{{form.imageUrl}}" class="ghost-button" bindtap="removeImage">移除</button>
+      </view>
+    </view>
+    <input value="{{form.imageUrl}}" data-field="imageUrl" bindinput="onInput" placeholder="也可以直接填图片 URL" />
+
+    <label>介绍</label>
+    <textarea value="{{form.description}}" data-field="description" bindinput="onInput" placeholder="写一句卖点" />
+  </view>
+
+  <button class="primary-button submit" loading="{{submitting}}" bindtap="submit">{{isEdit ? '保存修改' : '发布上架'}}</button>
+</view>
