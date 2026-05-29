@@ -17,15 +17,14 @@ function normalizeSpecs(specs) {
     .map((spec) => ({
       name: String(spec.name || "").trim(),
       weight: String(spec.weight || "").trim(),
-      price: Number(spec.price || 0),
+      price: normalizePrice(spec.price),
       stock: String(spec.stock == null ? "" : spec.stock).trim()
     }))
-    .filter((spec) => spec.name && spec.price > 0);
+    .filter((spec) => spec.name && spec.price);
 }
 
 function normalizePrice(value) {
-  const price = Number(value || 0);
-  return Number.isFinite(price) ? price : 0;
+  return String(value == null ? "" : value).trim();
 }
 
 function normalizeStock(value) {
@@ -95,7 +94,7 @@ function normalizeSkus(skus, specGroups) {
         skuCode: String((sku && sku.skuCode) || "").trim()
       };
     })
-    .filter((sku) => sku.specValueIds.length === specGroups.length && sku.price > 0);
+    .filter((sku) => sku.specValueIds.length === specGroups.length && sku.price);
 }
 
 function normalizeStringList(list) {

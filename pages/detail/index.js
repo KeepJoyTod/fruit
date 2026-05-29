@@ -16,7 +16,7 @@ Page({
     fruitId: "",
     loading: false,
     fruit: null,
-    minPrice: "0.00",
+    minPrice: "￥0.00",
     galleryImages: [],
     currentImage: "",
     currentImageIndex: 0,
@@ -286,7 +286,7 @@ Page({
     }
 
     wx.setClipboardData({
-      data: `${fruit.name} ${spec.specText || spec.name || ""} ¥${spec.priceText} 库存${spec.stockText || spec.stockNumber}`
+      data: `${fruit.name} ${spec.specText || spec.name || ""} ${spec.priceText} 库存${spec.stockText || spec.stockNumber}`
     });
   },
 
@@ -294,7 +294,7 @@ Page({
     const fruit = this.data.fruit;
 
     return {
-      title: fruit && fruit.name ? `${fruit.name} ¥${this.data.minPrice} 起` : "水果详情",
+      title: fruit && fruit.name ? `${fruit.name} ${this.data.minPrice} 起` : "水果详情",
       path: `/pages/detail/index?id=${this.data.fruitId}`,
       imageUrl: fruit && fruit.mainImage ? fruit.mainImage : ""
     };
@@ -304,7 +304,7 @@ Page({
     const fruit = this.data.fruit;
 
     return {
-      title: fruit && fruit.name ? `${fruit.name} ¥${this.data.minPrice} 起` : "水果详情",
+      title: fruit && fruit.name ? `${fruit.name} ${this.data.minPrice} 起` : "水果详情",
       query: `id=${this.data.fruitId}`,
       imageUrl: fruit && fruit.mainImage ? fruit.mainImage : ""
     };

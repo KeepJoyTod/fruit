@@ -93,7 +93,7 @@
             <view class="fruit-name">{{item.name}}</view>
             <view class="status-pill {{item.statusClass}}">{{item.statusText}}</view>
           </view>
-          <view class="fruit-meta">{{item.specCount}} 个规格 · ￥{{item.minPrice}} · 库存 {{item.stockSummary}}</view>
+          <view class="fruit-meta">{{item.specCount}} 个规格 · {{item.minPrice}} · 库存 {{item.stockSummary}}</view>
           <view class="fruit-actions">
             <button class="action-button" data-id="{{item._id}}" bindtap="goEdit">编辑</button>
             <button class="action-button" data-id="{{item._id}}" data-status="{{item.nextStatus}}" bindtap="toggleStatus">{{item.statusActionText}}</button>

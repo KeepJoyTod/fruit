@@ -35,6 +35,43 @@ function normalizeImageList(list) {
   return list.map((item) => String(item || "").trim()).filter(Boolean);
 }
 
+function normalizePrice(value) {
+  return String(value == null ? "" : value).trim();
+}
+
+function getPriceNumber(value) {
+  const text = normalizePrice(value);
+  const directNumber = Number(text);
+
+  if (Number.isFinite(directNumber)) {
+    return directNumber;
+  }
+
+  const match = text.match(/\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : 0;
+}
+
+function pickLowerPrice(current, next) {
+  const price = normalizePrice(next);
+  const currentPrice = normalizePrice(current);
+  const priceNumber = getPriceNumber(price);
+  const currentNumber = getPriceNumber(currentPrice);
+
+  if (!price) {
+    return currentPrice;
+  }
+
+  if (!currentPrice) {
+    return price;
+  }
+
+  if (priceNumber > 0 && (currentNumber === 0 || priceNumber < currentNumber)) {
+    return price;
+  }
+
+  return currentPrice;
+}
+
 function pickFruitMainImage(fruit) {
   const mainImage = String((fruit && fruit.mainImage) || "").trim();
 
@@ -123,22 +160,20 @@ async function loadShopMap(shopIds) {
 
 function getMinPrice(specs) {
   if (!Array.isArray(specs) || specs.length === 0) {
-    return 0;
+    return "";
   }
 
   return specs.reduce((min, spec) => {
-    const price = Number(spec && spec.price ? spec.price : 0);
-    return min === 0 || (price > 0 && price < min) ? price : min;
-  }, 0);
+    return pickLowerPrice(min, spec && spec.price);
+  }, "");
 }
 
 function getMinSkuPrice(fruit) {
   const skus = Array.isArray(fruit && fruit.skus) ? fruit.skus : [];
   if (skus.length > 0) {
     return skus.reduce((min, sku) => {
-      const price = Number(sku && sku.price ? sku.price : 0);
-      return min === 0 || (price > 0 && price < min) ? price : min;
-    }, 0);
+      return pickLowerPrice(min, sku && sku.price);
+    }, "");
   }
 
   return getMinPrice(fruit && fruit.specs);

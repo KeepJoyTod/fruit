@@ -93,7 +93,7 @@
       <view class="sku-item" wx:for="{{form.skus}}" wx:key="id">
         <view class="sku-name">{{item.specText}}</view>
         <view class="sku-fields">
-          <input class="field sku-field" type="digit" placeholder="价格" value="{{item.price}}" data-index="{{index}}" data-field="price" bindinput="onSkuInput" />
+          <input class="field sku-field" placeholder="价格，如 1元/斤" value="{{item.price}}" data-index="{{index}}" data-field="price" bindinput="onSkuInput" />
           <input class="field sku-field" placeholder="库存，如 20 / 充足 / 少量" value="{{item.stock}}" data-index="{{index}}" data-field="stock" bindinput="onSkuInput" />
           <input class="field sku-code-field" placeholder="编码（可选）" value="{{item.skuCode}}" data-index="{{index}}" data-field="skuCode" bindinput="onSkuInput" />
         </view>

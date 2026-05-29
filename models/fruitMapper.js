@@ -5,6 +5,7 @@ const {
   getStockState,
   hasLowSkuStock,
   formatPrice,
+  getPriceNumber,
   buildFruitGallery,
   normalizeImageList,
   pickFruitMainImage,
@@ -12,34 +13,37 @@ const {
 } = require("../utils/fruit");
 
 function normalizePublicFruit(fruit) {
-  const skuData = normalizeSkuData(fruit);
+  const source = fruit || {};
+  const skuData = normalizeSkuData(source);
 
   return {
-    ...fruit,
-    mainImage: pickFruitMainImage(fruit),
+    ...source,
+    mainImage: pickFruitMainImage(source),
     specGroups: skuData.specGroups,
     skus: skuData.skus,
-    minPriceValue: typeof fruit.minPrice !== "undefined" ? Number(fruit.minPrice || 0) : getMinSkuPrice(skuData.skus)
+    minPriceValue: getPriceNumber(typeof source.minPrice !== "undefined" ? source.minPrice : getMinSkuPrice(skuData.skus))
   };
 }
 
 function normalizeMerchantFruit(fruit) {
-  const skuData = normalizeSkuData(fruit);
+  const source = fruit || {};
+  const skuData = normalizeSkuData(source);
   const totalStock = getTotalSkuStock(skuData.skus);
-  const stockSummary = getSkuStockSummary(skuData.skus);
-  const status = (fruit && fruit.status) || "on_sale";
+  const status = source.status || "on_sale";
 
   return {
-    ...fruit,
-    mainImage: pickFruitMainImage(fruit),
+    ...source,
+    mainImage: pickFruitMainImage(source),
     status,
     statusText: status === "off_sale" ? "已下架" : "上架中",
     statusClass: status === "off_sale" ? "off" : "on",
     nextStatus: status === "off_sale" ? "on_sale" : "off_sale",
     statusActionText: status === "off_sale" ? "上架" : "下架",
+    specGroups: skuData.specGroups,
+    skus: skuData.skus,
     specCount: skuData.skus.length,
     totalStock,
-    stockSummary,
+    stockSummary: getSkuStockSummary(skuData.skus),
     isLowStock: hasLowSkuStock(skuData.skus),
     minPrice: formatPrice(getMinSkuPrice(skuData.skus))
   };
@@ -81,22 +85,29 @@ function normalizeDetailSku(sku) {
   };
 }
 
-function normalizeFruitDetail(fruit) {
-  const skuData = normalizeSkuData(fruit);
-  const specs = ((fruit && fruit.specs) || []).map((spec) => ({
+function normalizeDetailSpec(spec) {
+  const stockState = getStockState(spec && spec.stock);
+
+  return {
     ...spec,
     weightText: spec && spec.weight ? spec.weight : "未填写重量",
-    stockNumber: getStockState(spec && spec.stock).number || 0,
-    stockText: getStockState(spec && spec.stock).text,
+    stockNumber: stockState.number === null ? 0 : stockState.number,
+    stockText: stockState.text,
     priceText: formatPrice(spec && spec.price)
-  }));
+  };
+}
+
+function normalizeFruitDetail(fruit) {
+  const source = fruit || {};
+  const skuData = normalizeSkuData(source);
+  const specs = (source.specs || []).map((spec) => normalizeDetailSpec(spec));
   const skus = skuData.skus.map((sku) => normalizeDetailSku(sku));
-  const detailImages = normalizeImageList(fruit && fruit.detailImages);
+  const detailImages = normalizeImageList(source.detailImages);
   const normalizedFruit = {
-    ...fruit,
-    mainImage: pickFruitMainImage(fruit),
-    categoryIds: (fruit && fruit.categoryIds) || [],
-    tags: (fruit && fruit.tags) || [],
+    ...source,
+    mainImage: pickFruitMainImage(source),
+    categoryIds: source.categoryIds || [],
+    tags: source.tags || [],
     detailImages,
     specs,
     specGroups: skuData.specGroups,

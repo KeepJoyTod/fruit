@@ -1,0 +1,16 @@
+<view class="page auth-page">
+  <view class="hero">
+    <text class="title">鲜果摊</text>
+    <text class="subtitle">使用账号密码登录，摊主管理摊位，顾客浏览鲜果，超级管理员管理摊主。</text>
+  </view>
+
+  <view class="form">
+    <input value="{{form.username}}" data-field="username" bindinput="onInput" placeholder="账号" />
+    <input value="{{form.password}}" data-field="password" bindinput="onInput" placeholder="密码" password />
+  </view>
+
+  <view class="actions">
+    <button class="primary-button" loading="{{loggingIn}}" disabled="{{loggingIn}}" bindtap="submit">登录</button>
+    <button class="link-button" disabled="{{loggingIn}}" bindtap="goRegister">注册摊主</button>
+  </view>
+</view>

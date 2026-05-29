@@ -1,0 +1,41 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: fruit-management-backend
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3307}/${MYSQL_DATABASE:fruit_management}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+fruit:
+  auth:
+    session-ttl-minutes: ${FRUIT_SESSION_TTL_MINUTES:10080}
+  admin:
+    username: ${FRUIT_ADMIN_USERNAME:admin}
+    password: ${FRUIT_ADMIN_PASSWORD:admin123}
+  demo-data:
+    enabled: ${FRUIT_DEMO_DATA_ENABLED:true}
+  upload:
+    image-dir: ${FRUIT_IMAGE_DIR:./uploads/images}
+    image-url-prefix: ${FRUIT_IMAGE_URL_PREFIX:/images}

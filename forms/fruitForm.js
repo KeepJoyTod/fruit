@@ -4,6 +4,7 @@ const {
   pickFruitMainImage,
   normalizeSkuData,
   buildSkusFromGroups,
+  buildLegacySpecsFromSkus,
   normalizeSpecGroups,
   normalizeSkus
 } = require("../utils/fruit");
@@ -64,29 +65,31 @@ function mapSelectedValues(values) {
 }
 
 function buildEditFruitState(fruit) {
-  const specs = Array.isArray(fruit && fruit.specs) && fruit.specs.length > 0 ? fruit.specs : [createEmptySpec()];
-  const skuData = normalizeSkuData(fruit);
-  const mainImage = pickFruitMainImage(fruit);
-  const detailImages = normalizeImageList(fruit && fruit.detailImages);
+  const source = fruit || {};
+  const skuData = normalizeSkuData(source);
+  const specGroups = skuData.specGroups.length > 0 ? skuData.specGroups : createDefaultSpecGroups();
+  const skus = skuData.skus.length > 0 ? skuData.skus : buildSkusFromGroups(specGroups, []);
+  const mainImage = pickFruitMainImage(source);
+  const detailImages = normalizeImageList(source.detailImages);
 
   return {
     displayImage: mainImage,
     detailImages,
     detailImageTemps: [],
-    selectedTagMap: mapSelectedValues(fruit && fruit.tags),
-    selectedCategoryMap: mapSelectedValues(fruit && fruit.categoryIds),
+    selectedTagMap: mapSelectedValues(source.tags),
+    selectedCategoryMap: mapSelectedValues(source.categoryIds),
     form: {
-      name: (fruit && fruit.name) || "",
+      name: source.name || "",
       mainImage,
       mainImageTemp: "",
-      origin: (fruit && fruit.origin) || "",
-      description: (fruit && fruit.description) || "",
-      tags: (fruit && fruit.tags) || [],
-      categoryIds: (fruit && fruit.categoryIds) || [],
-      status: (fruit && fruit.status) || "on_sale",
-      specs,
-      specGroups: skuData.specGroups.length > 0 ? skuData.specGroups : createDefaultSpecGroups(),
-      skus: skuData.skus.length > 0 ? skuData.skus : buildSkusFromGroups(skuData.specGroups, [])
+      origin: source.origin || "",
+      description: source.description || "",
+      tags: source.tags || [],
+      categoryIds: source.categoryIds || [],
+      status: source.status || "on_sale",
+      specs: Array.isArray(source.specs) && source.specs.length > 0 ? source.specs : [createEmptySpec()],
+      specGroups,
+      skus
     }
   };
 }
@@ -118,6 +121,7 @@ function validateFruitForm(options) {
 
   const specGroups = normalizeSpecGroups(form.specGroups);
   const skus = normalizeSkus(form.skus, specGroups);
+
   if (specGroups.length === 0) {
     return "请至少填写一个规格项";
   }
@@ -135,20 +139,25 @@ function validateFruitForm(options) {
 
 function buildFruitPayload(form, extra) {
   const specGroups = normalizeSpecGroups(form.specGroups);
+  const skus = normalizeSkus(form.skus, specGroups);
+  const specs = buildLegacySpecsFromSkus(specGroups, skus);
 
-  return Object.assign({
-    name: form.name,
-    mainImage: form.mainImage,
-    detailImages: form.detailImages,
-    origin: form.origin,
-    description: form.description,
-    categoryIds: form.categoryIds,
-    tags: form.tags,
-    status: form.status,
-    specs: form.specs,
-    specGroups,
-    skus: normalizeSkus(form.skus, specGroups)
-  }, extra || {});
+  return Object.assign(
+    {
+      name: form.name,
+      mainImage: form.mainImage,
+      detailImages: form.detailImages || [],
+      origin: form.origin,
+      description: form.description,
+      categoryIds: form.categoryIds,
+      tags: form.tags,
+      status: form.status,
+      specs,
+      specGroups,
+      skus
+    },
+    extra || {}
+  );
 }
 
 module.exports = {

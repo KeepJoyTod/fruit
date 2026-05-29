@@ -1,0 +1,87 @@
+.admin-page {
+  padding: 28rpx;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.title {
+  display: block;
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.subtitle {
+  display: block;
+  margin-top: 8rpx;
+  color: #637166;
+  font-size: 26rpx;
+}
+
+.refresh {
+  width: 132rpx;
+  margin: 0;
+}
+
+.loading,
+.empty {
+  margin-top: 120rpx;
+  text-align: center;
+  color: #7a857d;
+}
+
+.vendor-list {
+  display: grid;
+  gap: 18rpx;
+}
+
+.vendor-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 18rpx;
+  padding: 22rpx;
+  border-radius: 12rpx;
+  background: #ffffff;
+}
+
+.vendor-main {
+  flex: 1;
+}
+
+.stall {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.meta {
+  display: block;
+  margin-top: 8rpx;
+  color: #637166;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.vendor-side {
+  display: grid;
+  align-content: center;
+  gap: 14rpx;
+  width: 116rpx;
+}
+
+.status {
+  text-align: center;
+  font-size: 24rpx;
+}
+
+.status.enabled {
+  color: #1f7a4d;
+}
+
+.status.disabled {
+  color: #b42318;
+}

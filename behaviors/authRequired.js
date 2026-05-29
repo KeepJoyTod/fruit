@@ -5,7 +5,7 @@ const { isShopAccessDenied } = require("../utils/permission");
 
 module.exports = Behavior({
   methods: {
-    getRequiredShopId() {
+    getRequiredShopId() {     
       return store.getShopId();
     },
 

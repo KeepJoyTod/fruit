@@ -44,10 +44,18 @@ Page({
       fruitId: options.id || ""
     });
 
+    if (!this.requireShopLogin()) {
+      return;
+    }
+
     this.loadFruit();
   },
 
   onShow() {
+    if (!this.requireShopLogin()) {
+      return;
+    }
+
     this.loadCategories();
   },
 
@@ -393,6 +401,7 @@ Page({
     try {
       const mainImage = await this.uploadMainImage();
       const detailImages = await this.uploadDetailImages();
+
       await fruitService.updateFruit(buildFruitPayload(this.data.form, {
         fruitId: this.data.fruitId,
         mainImage,

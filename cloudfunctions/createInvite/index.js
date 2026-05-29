@@ -8,6 +8,7 @@ cloud.init({
 const db = cloud.database();
 const shops = db.collection("shops");
 const invites = db.collection("invites");
+const INVITE_ROLE = "manager";
 
 function createCode() {
   return crypto.randomBytes(16).toString("hex");
@@ -66,8 +67,9 @@ exports.main = async (event) => {
     await invites.add({
       data: {
         shopId,
-        creatorOpenid: openid,
+        creatorId: openid,
         code,
+        role: INVITE_ROLE,
         status: "active",
         expireTime,
         createTime: db.serverDate(),
@@ -78,6 +80,7 @@ exports.main = async (event) => {
     return {
       success: true,
       code,
+      role: INVITE_ROLE,
       path: `/pages/login/index?inviteCode=${code}`,
       expireTime
     };

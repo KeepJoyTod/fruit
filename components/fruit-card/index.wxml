@@ -2,7 +2,7 @@
   <view class="fruit-media">
     <image class="fruit-image" src="{{fruit.mainImage}}" mode="aspectFill" wx:if="{{fruit.mainImage}}" />
     <view class="fruit-image placeholder" wx:else>暂无图片</view>
-    <view class="fruit-price-badge">￥{{minPrice}} 起</view>
+    <view class="fruit-price-badge">{{minPrice}} 起</view>
   </view>
   <view class="fruit-info">
     <view class="fruit-name">{{fruit.name}}</view>

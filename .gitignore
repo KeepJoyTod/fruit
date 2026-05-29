@@ -1,5 +1,6 @@
 project.private.config.json
 project.private.config.json.backup
+project.config.json.backup
 
 .claude/
 
@@ -19,12 +20,19 @@ lerna-debug.log*
 *.swo
 *~
 *.iml
+.vs/
+.project
+.classpath
 
 dist/
 build/
 temp/
 tmp/
 out/
+.babel_cache/
+.cache/
+.parcel-cache/
+.eslintcache
 
 cloudfunctions/**/node_modules/
 cloudfunctions/**/package-lock.json
@@ -33,6 +41,8 @@ cloudfunctions/**/pnpm-lock.yaml
 cloudfunctions/**/dist/
 cloudfunctions/**/.runtime/
 cloudfunctions/**/.serverless/
+cloudfunctions/**/.cache/
+cloudfunctions/**/.eslintcache
 
 Thumbs.db
 Desktop.ini
@@ -46,6 +56,7 @@ __pycache__/
 
 *.bak
 *.backup
+*.orig
 
 package-lock.json
 yarn.lock
@@ -64,3 +75,83 @@ pnpm-lock.yaml
 # 微信开发者工具相关
 project.private.config*.json
 sitemap.json.backup
+app.json.backup
+app.js.backup
+app.wxss.backup
+
+# 微信小程序云开发相关
+cloudfunctionTemplate/
+functions/
+
+# 小程序构建产物
+*.min.js
+*.min.wxss
+
+# 测试相关
+coverage/
+.nyc_output/
+test-report/
+
+# 临时文件
+*.tmp
+*.temp
+*.swp
+.svn/
+.hg/
+.CVS/
+._*
+
+# 编辑器备份和自动保存
+*~
+*.swp
+*.bak
+*.backup
+*.sublime-project
+*.sublime-workspace
+.settings/
+.project
+
+# OS X
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# Java/Maven 后端项目
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/logs/
+
+# 子小程序项目
+miniprogram/project.private.config.json
+miniprogram/project.private.config*.json
+miniprogram/node_modules/
+miniprogram/miniprogram_npm/
+miniprogram/dist/
+miniprogram/build/

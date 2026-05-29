@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fruit.management.mapper.FruitMapper">
+    <resultMap id="FruitResultMap" type="com.fruit.management.entity.FruitEntity">
+        <id column="id" property="id"/>
+        <result column="vendor_id" property="vendorId"/>
+        <result column="name" property="name"/>
+        <result column="price" property="price"/>
+        <result column="unit" property="unit"/>
+        <result column="status" property="status"/>
+        <result column="description" property="description"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted_at" property="deletedAt"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.fruit.management.entity.FruitEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO fruits (vendor_id, name, price, unit, status, description, view_count, created_at, updated_at)
+        VALUES (#{vendorId}, #{name}, #{price}, #{unit}, #{status}, #{description}, #{viewCount}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update" parameterType="com.fruit.management.entity.FruitEntity">
+        UPDATE fruits
+        SET name = #{name},
+            price = #{price},
+            unit = #{unit},
+            status = #{status},
+            description = #{description},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateViewCount">
+        UPDATE fruits SET view_count = #{viewCount} WHERE id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="FruitResultMap">
+        SELECT * FROM fruits WHERE id = #{id}
+    </select>
+
+    <select id="selectByVendorId" resultMap="FruitResultMap">
+        SELECT * FROM fruits WHERE vendor_id = #{vendorId} AND status <> 'DELETED' ORDER BY updated_at DESC
+    </select>
+
+    <select id="selectPublicFruits" resultMap="FruitResultMap">
+        SELECT * FROM fruits
+        WHERE status IN ('ON_SALE', 'LIMITED')
+          AND (#{vendorId} IS NULL OR vendor_id = #{vendorId})
+        ORDER BY updated_at DESC
+    </select>
+
+    <select id="selectPublicFruitsWithTag" resultMap="FruitResultMap">
+        SELECT f.* FROM fruits f
+        INNER JOIN fruit_tags ft ON f.id = ft.fruit_id
+        WHERE f.status IN ('ON_SALE', 'LIMITED')
+          AND (#{vendorId} IS NULL OR f.vendor_id = #{vendorId})
+          AND ft.tag = #{tag}
+        ORDER BY f.updated_at DESC
+    </select>
+</mapper>

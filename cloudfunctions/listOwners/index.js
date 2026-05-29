@@ -24,6 +24,18 @@ function assertCreator(openid, shop) {
   }
 }
 
+function normalizeRole(ownerOpenid, shop, user) {
+  if (ownerOpenid === shop.creatorId) {
+    return "creator";
+  }
+
+  return user && user.role === "creator" ? "creator" : "manager";
+}
+
+function getRoleText(role) {
+  return role === "creator" ? "店主" : "管理员";
+}
+
 exports.main = async (event) => {
   const wxContext = cloud.getWXContext();
   const openid = wxContext.OPENID;
@@ -61,11 +73,12 @@ exports.main = async (event) => {
       isCreator: true,
       owners: ownerIds.map((ownerOpenid) => {
         const user = userMap[ownerOpenid] || {};
+        const role = normalizeRole(ownerOpenid, shop, user);
         return {
           openid: ownerOpenid,
           displayName: user.nickName || user.name || `用户 ${ownerOpenid.slice(-6)}`,
-          role: ownerOpenid === shop.creatorId ? "creator" : "owner",
-          roleText: ownerOpenid === shop.creatorId ? "店主" : "Owner",
+          role,
+          roleText: getRoleText(role),
           removable: ownerOpenid !== shop.creatorId,
           createTime: user.createTime,
           updateTime: user.updateTime

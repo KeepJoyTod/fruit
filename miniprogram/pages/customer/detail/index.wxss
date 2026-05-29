@@ -1,0 +1,92 @@
+.hero-image {
+  width: 100%;
+  height: 520rpx;
+  border-radius: 12rpx;
+  background: #dbe6dc;
+}
+
+.hero-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1f7a4d;
+  font-size: 48rpx;
+  font-weight: 700;
+}
+
+.detail,
+.vendor {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  border-radius: 12rpx;
+  background: #ffffff;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.name {
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.status {
+  color: #1f7a4d;
+  font-size: 26rpx;
+}
+
+.price {
+  display: block;
+  margin-top: 14rpx;
+  color: #d35400;
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.description {
+  display: block;
+  margin-top: 18rpx;
+  color: #56635b;
+  line-height: 1.6;
+}
+
+.tags {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+
+.tags text {
+  padding: 8rpx 14rpx;
+  border-radius: 8rpx;
+  background: #edf4ef;
+  color: #1f7a4d;
+  font-size: 24rpx;
+}
+
+.vendor-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.vendor-address {
+  display: block;
+  margin-top: 12rpx;
+  color: #637166;
+  font-size: 26rpx;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  gap: 18rpx;
+  margin-top: 22rpx;
+}
+
+.nav-button {
+  margin: 0;
+}

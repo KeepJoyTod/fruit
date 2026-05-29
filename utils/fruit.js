@@ -3,8 +3,19 @@ function createId(prefix) {
 }
 
 function normalizePrice(value) {
-  const price = Number(value || 0);
-  return Number.isFinite(price) ? price : 0;
+  return String(value == null ? "" : value).trim();
+}
+
+function getPriceNumber(value) {
+  const text = normalizePrice(value);
+  const directNumber = Number(text);
+
+  if (Number.isFinite(directNumber)) {
+    return directNumber;
+  }
+
+  const match = text.match(/\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : 0;
 }
 
 function normalizeStock(value) {
@@ -155,7 +166,7 @@ function normalizeSkus(skus, specGroups) {
         skuCode: String((sku && sku.skuCode) || "").trim()
       };
     })
-    .filter((sku) => sku.specValueIds.length === groups.length && sku.price > 0);
+    .filter((sku) => sku.specValueIds.length === groups.length && sku.price);
 }
 
 function buildSkusFromGroups(specGroups, currentSkus) {
@@ -179,6 +190,18 @@ function buildSkusFromGroups(specGroups, currentSkus) {
       skuCode: currentSku.skuCode || ""
     };
   });
+}
+
+function buildLegacySpecsFromSkus(specGroups, skus) {
+  const groups = normalizeSpecGroups(specGroups);
+  const normalizedSkus = normalizeSkus(skus, groups);
+
+  return normalizedSkus.map((sku) => ({
+    name: sku.specText || buildSkuText(groups, sku.specValueIds),
+    weight: "",
+    price: sku.price,
+    stock: sku.stock
+  }));
 }
 
 function convertSpecsToSkuData(specs) {
@@ -257,13 +280,28 @@ function normalizeSkuData(fruit) {
 
 function getMinSkuPrice(skus) {
   if (!Array.isArray(skus) || skus.length === 0) {
-    return 0;
+    return "";
   }
 
   return skus.reduce((min, sku) => {
     const price = normalizePrice(sku && sku.price);
-    return min === 0 || (price > 0 && price < min) ? price : min;
-  }, 0);
+    const priceNumber = getPriceNumber(price);
+    const minNumber = getPriceNumber(min);
+
+    if (!price) {
+      return min;
+    }
+
+    if (!min) {
+      return price;
+    }
+
+    if (priceNumber > 0 && (minNumber === 0 || priceNumber < minNumber)) {
+      return price;
+    }
+
+    return min;
+  }, "");
 }
 
 function getMinPrice(specs) {
@@ -304,7 +342,18 @@ function hasLowSkuStock(skus) {
 }
 
 function formatPrice(price) {
-  return Number(price || 0).toFixed(2);
+  const text = normalizePrice(price);
+  const priceNumber = Number(text);
+
+  if (!text) {
+    return "￥0.00";
+  }
+
+  if (Number.isFinite(priceNumber)) {
+    return `￥${priceNumber.toFixed(2)}`;
+  }
+
+  return text;
 }
 
 function normalizeImageList(list) {
@@ -344,11 +393,13 @@ module.exports = {
   normalizeSpecGroups,
   normalizeSkus,
   buildSkusFromGroups,
+  buildLegacySpecsFromSkus,
   buildSkuText,
   getSkuKey,
   normalizeSkuData,
   getMinSkuPrice,
   getMinPrice,
+  getPriceNumber,
   getTotalSkuStock,
   getSkuStockSummary,
   getStockState,

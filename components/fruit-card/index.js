@@ -13,7 +13,7 @@ Component({
   },
 
   data: {
-    minPrice: "0.00"
+    minPrice: "￥0.00"
   },
 
   observers: {

@@ -24,7 +24,7 @@
     </view>
     <view class="page-title">{{fruit.name}}</view>
     <view class="price-row">
-      <view class="price">￥{{selectedSku ? selectedSku.priceText : minPrice}}</view>
+      <view class="price">{{selectedSku ? selectedSku.priceText : minPrice}}</view>
       <view class="price-note">{{selectedSku ? '当前选择' : '起售参考价'}}</view>
     </view>
     <view class="selected-summary" wx:if="{{selectedSku}}">
@@ -58,7 +58,7 @@
       </view>
     </view>
     <view class="sku-summary" wx:if="{{selectedSku}}">
-      <view class="spec-price">￥{{selectedSku.priceText}}</view>
+      <view class="spec-price">{{selectedSku.priceText}}</view>
       <view class="muted" wx:if="{{selectedSku.isAvailable}}">库存 {{selectedSku.stockText}}</view>
       <view class="spec-stock is-out" wx:else>已售罄</view>
     </view>

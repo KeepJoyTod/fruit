@@ -1,0 +1,72 @@
+<view class="page">
+  <view class="profile">
+    <view class="profile-summary" wx:if="{{!editingProfile}}">
+      <text class="stall">{{vendor.stallName || '未设置摊位'}}</text>
+      <text class="address">{{vendor.address || '请先创建摊位资料'}}</text>
+    </view>
+    <view class="profile-actions" wx:if="{{!editingProfile}}">
+      <button class="ghost-button setup" bindtap="toggleProfileEdit">编辑</button>
+      <button class="ghost-button setup" bindtap="setupDemoVendor">示例</button>
+    </view>
+
+    <view class="profile-form" wx:else>
+      <input value="{{profileForm.stallName}}" data-field="stallName" bindinput="onProfileInput" placeholder="摊位名称" />
+      <input value="{{profileForm.phone}}" data-field="phone" bindinput="onProfileInput" placeholder="联系电话" type="number" />
+      <input value="{{profileForm.address}}" data-field="address" bindinput="onProfileInput" placeholder="摊位地址" />
+      <view class="location-row">
+        <input value="{{profileForm.latitude}}" data-field="latitude" bindinput="onProfileInput" placeholder="纬度" type="digit" />
+        <input value="{{profileForm.longitude}}" data-field="longitude" bindinput="onProfileInput" placeholder="经度" type="digit" />
+      </view>
+      <view class="profile-form-actions">
+        <button class="ghost-button" bindtap="chooseLocation">选位置</button>
+        <button class="ghost-button" bindtap="toggleProfileEdit">取消</button>
+        <button class="primary-button" bindtap="saveProfile">保存</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="stats">
+    <view>
+      <text class="num">{{dashboard.totalFruits || 0}}</text>
+      <text class="label">水果</text>
+    </view>
+    <view>
+      <text class="num">{{dashboard.onSaleFruits || 0}}</text>
+      <text class="label">在售</text>
+    </view>
+    <view>
+      <text class="num">{{dashboard.soldOutFruits || 0}}</text>
+      <text class="label">售罄</text>
+    </view>
+    <view>
+      <text class="num">{{dashboard.totalViews || 0}}</text>
+      <text class="label">浏览</text>
+    </view>
+  </view>
+
+  <button class="primary-button add" bindtap="goCreate">上架水果</button>
+
+  <view class="fruit-list">
+    <view class="fruit-item" wx:for="{{fruits}}" wx:key="id">
+      <image wx:if="{{item.images[0]}}" class="thumb" src="{{item.images[0]}}" mode="aspectFill" />
+      <view wx:else class="thumb thumb-placeholder">果</view>
+      <view class="item-main">
+        <text class="fruit-name">{{item.name}}</text>
+        <text class="fruit-price">¥{{item.price}}/{{item.unit}}</text>
+        <text class="fruit-status">{{statusText[item.status]}}</text>
+      </view>
+      <view class="item-actions">
+        <button size="mini" data-id="{{item.id}}" bindtap="goEdit">编辑</button>
+        <button size="mini" data-id="{{item.id}}" data-status="ON_SALE" bindtap="changeStatus">在售</button>
+        <button size="mini" data-id="{{item.id}}" data-status="LIMITED" bindtap="changeStatus">少量</button>
+        <button size="mini" data-id="{{item.id}}" data-status="SOLD_OUT" bindtap="changeStatus">售罄</button>
+        <button size="mini" class="danger" data-id="{{item.id}}" bindtap="deleteFruit">下架</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{fruits.length === 0}}">
+    <text>还没有上架水果</text>
+    <button class="ghost-button" bindtap="goCreate">去上架</button>
+  </view>
+</view>
