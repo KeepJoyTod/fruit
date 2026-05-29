@@ -38,6 +38,7 @@ Page({
       });
 
       ui.showSuccess(this.data.isInviteMode ? "已加入店铺" : data.isNewShop ? "已创建店铺" : "登录成功");
+      ui.showSuccess(this.data.isInviteMode ? "已加入店铺" : "登录成功");
       navigation.redirectTo("/pages/merchant/index");
     } catch (error) {
       console.error("merchant login failed", error);

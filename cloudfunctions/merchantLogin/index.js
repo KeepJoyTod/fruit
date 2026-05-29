@@ -42,6 +42,34 @@ async function getShopById(shopId) {
 
 function isShopOwner(openid, shop) {
   return Boolean(shop && Array.isArray(shop.ownerIds) && shop.ownerIds.includes(openid));
+function pickShop(shop) {
+  if (!shop) {
+    return null;
+  }
+
+  return {
+    _id: shop._id,
+    name: shop.name || "",
+    logo: shop.logo || "",
+    announcement: shop.announcement || "",
+    announcementUpdateTime: shop.announcementUpdateTime,
+    contactPhone: shop.contactPhone || "",
+    address: shop.address || "",
+    businessStatus: shop.businessStatus || "open",
+    creatorId: shop.creatorId,
+    ownerIds: shop.ownerIds || [],
+    createTime: shop.createTime,
+    updateTime: shop.updateTime
+  };
+}
+
+function canManageShop(openid, user, shop) {
+  if (!openid || !user || !shop) {
+    return false;
+  }
+
+  const ownerIds = Array.isArray(shop.ownerIds) ? shop.ownerIds : [];
+  return Boolean(user.shopId && user.shopId === shop._id && ownerIds.includes(openid));
 }
 
 function pickShop(shop) {
